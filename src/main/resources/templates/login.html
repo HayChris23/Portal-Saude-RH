@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Login - Portal Saúde RH</title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f4f7f9;
+        }
+
+        .container {
+            width: 900px;
+            max-width: 95%;
+            min-height: 520px;
+            background: white;
+            border-radius: 18px;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 45% 55%;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .left {
+            background: #006b5f;
+            color: white;
+            padding: 55px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .left h1 {
+            font-size: 32px;
+            margin-bottom: 18px;
+        }
+
+        .left p {
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .right {
+            padding: 55px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .logo {
+            margin-bottom: 35px;
+        }
+
+        .logo img {
+            width: 180px;
+            height: auto;
+            display: block;
+        }
+
+        .right h2 {
+            color: #243746;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            background: #006b5f;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .login-button:hover {
+            background: #005449;
+        }
+
+        .info {
+            margin-top: 25px;
+            font-size: 12px;
+            color: #94a3b8;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 700px) {
+
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .left {
+                display: none;
+            }
+
+            .right {
+                padding: 40px 30px;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="left">
+
+            <h1>Portal Saúde RH</h1>
+
+            <p>
+                Um canal digital para facilitar as solicitações,
+                o acompanhamento e a consulta de informações
+                relacionadas aos benefícios de saúde.
+            </p>
+
+        </div>
+
+
+        <div class="right">
+
+            <div class="logo">
+                <img src="/images/logo-findes.png" alt="FINDES">
+            </div>
+
+            <h2>Acesse o Portal</h2>
+
+            <p class="subtitle">
+                Utilize sua conta corporativa para acessar os serviços
+                disponíveis.
+            </p>
+
+            <a href="/portal" class="login-button">
+                Entrar com conta corporativa
+            </a>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Solicitação registrada | Portal Saúde RH</title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: #f4f7f6;
+
+            min-height: 100vh;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+        }
+
+        .container {
+
+            background: white;
+
+            width: 90%;
+
+            max-width: 600px;
+
+            border-radius: 14px;
+
+            padding: 45px;
+
+            text-align: center;
+
+            border: 1px solid #e3e9e6;
+        }
+
+        .success-icon {
+
+            width: 70px;
+
+            height: 70px;
+
+            border-radius: 50%;
+
+            background: #e6f5ef;
+
+            color: #00875a;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            margin: 0 auto 25px;
+
+            font-size: 32px;
+        }
+
+        h1 {
+
+            font-size: 25px;
+
+            margin-bottom: 10px;
+        }
+
+        .description {
+
+            color: #71807a;
+
+            font-size: 14px;
+
+            margin-bottom: 30px;
+        }
+
+        .protocol {
+
+            background: #f4f7f6;
+
+            border-radius: 10px;
+
+            padding: 20px;
+
+            margin-bottom: 20px;
+        }
+
+        .protocol-label {
+
+            font-size: 12px;
+
+            color: #7c8985;
+
+            margin-bottom: 8px;
+        }
+
+        .protocol-number {
+
+            font-size: 24px;
+
+            font-weight: bold;
+
+            color: #00875a;
+        }
+
+        .info {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            padding: 15px 0;
+
+            border-bottom: 1px solid #edf0ef;
+
+            font-size: 14px;
+        }
+
+        .info:last-child {
+
+            border-bottom: none;
+        }
+
+        .label {
+
+            color: #7c8985;
+        }
+
+        .value {
+
+            font-weight: bold;
+        }
+
+        .buttons {
+
+            margin-top: 30px;
+        }
+
+        .btn {
+
+            display: inline-block;
+
+            padding: 13px 22px;
+
+            border-radius: 8px;
+
+            background: #00875a;
+
+            color: white;
+
+            text-decoration: none;
+
+            font-size: 14px;
+
+            font-weight: bold;
+        }
+
+        .btn:hover {
+
+            background: #006f49;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+    <div class="success-icon">
+
+        ✓
+
+    </div>
+
+
+    <h1>
+
+        Solicitação registrada com sucesso!
+
+    </h1>
+
+
+    <p class="description">
+
+        Sua solicitação foi registrada e encaminhada para análise do RH.
+
+    </p>
+
+
+    <div class="protocol">
+
+        <div class="protocol-label">
+
+            Número do protocolo
+
+        </div>
+
+
+        <div class="protocol-number">
+
+            <span th:text="${solicitacao.protocolo}">
+                PSRH-2026-000001
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="info">
+
+        <span class="label">
+            Categoria
+        </span>
+
+        <span class="value"
+              th:text="${solicitacao.categoria}">
+            Autorização de exame
+        </span>
+
+    </div>
+
+
+    <div class="info">
+
+        <span class="label">
+            Status
+        </span>
+
+        <span class="value"
+              th:text="${solicitacao.status}">
+            Aberta
+        </span>
+
+    </div>
+
+
+    <div class="info">
+
+        <span class="label">
+            Colaborador
+        </span>
+
+        <span class="value"
+              th:text="${solicitacao.colaborador}">
+            Hayane
+        </span>
+
+    </div>
+
+
+    <div class="buttons">
+
+        <a href="/portal" class="btn">
+
+            Voltar para o Portal
+
+        </a>
+
+    </div>
+</div>
+
+
+</body>
+</html>

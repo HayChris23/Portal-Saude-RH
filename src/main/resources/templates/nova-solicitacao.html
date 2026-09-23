@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Nova Solicitação | Portal Saúde RH</title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: #f4f8fb;
+            color: #263238;
+        }
+
+        /* =========================
+           HEADER
+        ========================= */
+
+        header {
+            height: 72px;
+            background: white;
+            border-bottom: 1px solid #e1e8ee;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 45px;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            color: #0066b3;
+        }
+
+        .logo span {
+            color: #263238;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .avatar {
+            width: 38px;
+            height: 38px;
+
+            border-radius: 50%;
+
+            background: #0066b3;
+            color: white;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-weight: bold;
+        }
+
+        /* =========================
+           LAYOUT
+        ========================= */
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 72px);
+        }
+
+        /* =========================
+           SIDEBAR
+        ========================= */
+
+        .sidebar {
+            width: 235px;
+
+            background: white;
+            border-right: 1px solid #e1e8ee;
+
+            padding: 30px 18px;
+        }
+
+        .menu-title {
+            font-size: 12px;
+            color: #8a969f;
+
+            text-transform: uppercase;
+
+            margin: 0 12px 12px;
+        }
+
+        .menu-item {
+            display: block;
+
+            padding: 13px 14px;
+
+            margin-bottom: 6px;
+
+            border-radius: 8px;
+
+            text-decoration: none;
+
+            color: #4c575f;
+
+            font-size: 14px;
+
+            transition: 0.2s;
+        }
+
+        .menu-item:hover {
+            background: #eaf4fb;
+            color: #0066b3;
+        }
+
+        .menu-item.active {
+            background: #e5f1f9;
+            color: #0066b3;
+            font-weight: bold;
+        }
+
+        /* =========================
+           MAIN
+        ========================= */
+
+        main {
+            flex: 1;
+
+            padding: 38px 45px;
+
+            max-width: 1150px;
+        }
+
+        .breadcrumb {
+            font-size: 13px;
+            color: #7c898f;
+
+            margin-bottom: 25px;
+        }
+
+        .breadcrumb a {
+            color: #0066b3;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .page-title {
+            margin-bottom: 28px;
+        }
+
+        .page-title h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            color: #1f2d38;
+        }
+
+        .page-title p {
+            color: #71808a;
+            font-size: 14px;
+        }
+
+        /* =========================
+           FORMULÁRIO
+        ========================= */
+
+        .form-container {
+            background: white;
+
+            border: 1px solid #dce5ec;
+
+            border-radius: 14px;
+
+            padding: 32px;
+
+            max-width: 950px;
+
+            box-shadow: 0 4px 15px rgba(0, 80, 140, 0.06);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+            margin-bottom: 8px;
+
+            color: #30404c;
+        }
+
+        .required {
+            color: #d64545;
+        }
+
+        select,
+        textarea,
+        input[type="file"] {
+
+            width: 100%;
+
+            border: 1px solid #cbd8e2;
+
+            border-radius: 8px;
+
+            padding: 13px;
+
+            font-size: 14px;
+
+            background: white;
+
+            color: #263238;
+
+            transition: 0.2s;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        select:focus,
+        textarea:focus {
+
+            outline: none;
+
+            border-color: #0066b3;
+
+            box-shadow: 0 0 0 3px #eaf4fb;
+        }
+
+        textarea {
+
+            min-height: 150px;
+
+            resize: vertical;
+        }
+
+        /* =========================
+           ANEXO
+        ========================= */
+
+        input[type="file"] {
+            background: #f8fbfd;
+            cursor: pointer;
+        }
+
+        input[type="file"]:focus {
+            outline: none;
+            border-color: #0066b3;
+            box-shadow: 0 0 0 3px #eaf4fb;
+        }
+
+        .file-help {
+            margin-top: 8px;
+
+            font-size: 12px;
+
+            color: #7c898f;
+        }
+
+        /* =========================
+           BOTÕES
+        ========================= */
+
+        .form-actions {
+
+            display: flex;
+
+            justify-content: flex-end;
+
+            align-items: center;
+
+            gap: 12px;
+
+            margin-top: 30px;
+        }
+
+        .cancel-button {
+
+            display: inline-block;
+
+            padding: 12px 22px;
+
+            border-radius: 8px;
+
+            border: 1px solid #0066b3;
+
+            background: white;
+
+            color: #0066b3;
+
+            text-decoration: none;
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        .cancel-button:hover {
+
+            background: #eaf4fb;
+        }
+
+        .submit-button {
+
+            padding: 12px 24px;
+
+            border-radius: 8px;
+
+            border: none;
+
+            background: #0066b3;
+
+            color: white;
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        .submit-button:hover {
+
+            background: #004f8a;
+        }
+
+        /* =========================
+           RESPONSIVO
+        ========================= */
+
+        @media (max-width: 700px) {
+
+            header {
+                padding: 0 20px;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            main {
+                padding: 25px 20px;
+            }
+
+            .form-container {
+                padding: 22px;
+            }
+
+            .form-actions {
+
+                flex-direction: column-reverse;
+
+                align-items: stretch;
+            }
+
+            .cancel-button,
+            .submit-button {
+
+                width: 100%;
+
+                text-align: center;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<header>
+
+    <div class="logo">
+        Portal <span>Saúde RH</span>
+    </div>
+
+    <div class="user-area">
+
+        <span>Hayane</span>
+
+        <div class="avatar">
+            H
+        </div>
+
+    </div>
+
+</header>
+
+
+<div class="layout">
+
+
+    <!-- MENU -->
+
+    <aside class="sidebar">
+
+        <div class="menu-title">
+            Menu
+        </div>
+
+        <a href="/portal" class="menu-item">
+            🏠 Início
+        </a>
+
+        <a href="/nova-solicitacao" class="menu-item active">
+            ➕ Nova Solicitação
+        </a>
+
+        <a href="#" class="menu-item">
+            📋 Minhas Solicitações
+        </a>
+
+        <a href="#" class="menu-item">
+            🤖 Assistente Saúde RH
+        </a>
+
+    </aside>
+
+
+    <!-- CONTEÚDO -->
+
+    <main>
+
+        <div class="breadcrumb">
+
+            <a href="/portal">Início</a>
+
+            &nbsp; / &nbsp;
+
+            Nova Solicitação
+
+        </div>
+
+
+        <div class="page-title">
+
+            <h1>
+                Nova Solicitação
+            </h1>
+
+            <p>
+                Informe os dados abaixo para registrar uma solicitação relacionada ao seu plano de saúde.
+            </p>
+
+        </div>
+
+
+        <div class="form-container">
+
+            <form action="/solicitacao/salvar"
+                  method="post"
+                  enctype="multipart/form-data">
+
+
+                <!-- CATEGORIA -->
+
+                <div class="form-group">
+
+                    <label for="categoria">
+
+                        Categoria
+
+                        <span class="required">*</span>
+
+                    </label>
+
+
+                    <select
+                        id="categoria"
+                        name="categoria"
+                        required>
+
+                        <option value="">
+                            Selecione uma categoria
+                        </option>
+
+                        <option value="autorizacao">
+                            Autorização de exame
+                        </option>
+
+                        <option value="renovacao">
+                            Renovação de guia
+                        </option>
+
+                        <option value="cartao">
+                            Número/cartão do plano
+                        </option>
+
+                        <option value="utilizacao">
+                            Dúvida sobre utilização
+                        </option>
+
+                        <option value="valores">
+                            Dúvida sobre valores
+                        </option>
+
+                        <option value="documentacao">
+                            Documentação
+                        </option>
+
+                        <option value="outros">
+                            Outros
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- DESCRIÇÃO -->
+
+                <div class="form-group">
+
+                    <label for="descricao">
+
+                        Descrição da solicitação
+
+                        <span class="required">*</span>
+
+                    </label>
+
+
+                    <textarea
+                        id="descricao"
+                        name="descricao"
+                        placeholder="Descreva sua solicitação com o máximo de detalhes possível..."
+                        required></textarea>
+
+                </div>
+
+
+                <!-- DOCUMENTO -->
+
+                <div class="form-group">
+
+                    <label for="arquivo">
+                        Anexar documento
+                    </label>
+
+
+                    <input
+                        type="file"
+                        id="arquivo"
+                        name="arquivo"
+                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    >
+
+
+                    <div class="file-help">
+
+                        Formatos permitidos: PDF, JPG, PNG, DOC e DOCX.
+                        <br>
+                        Caso necessário, anexe um documento para complementar sua solicitação.
+
+                    </div>
+
+                </div>
+
+
+                <!-- BOTÕES -->
+
+                <div class="form-actions">
+
+                    <a
+                        href="/portal"
+                        class="cancel-button">
+
+                        Cancelar
+
+                    </a>
+
+
+                    <button
+                        type="submit"
+                        class="submit-button">
+
+                        Enviar Solicitação
+
+                    </button>
+
+                </div>
+
+
+            </form>
+
+        </div>
+
+    </main>
+
+</div>
+
+</body>
+
+</html>
