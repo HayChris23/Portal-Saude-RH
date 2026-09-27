@@ -19,12 +19,12 @@ public class HomeController {
         this.solicitacaoService = solicitacaoService;
     }
 
-    @GetMapping("/")
+        @GetMapping("/")
     public String home() {
-        return "index";
-    }
+        return "login";
+    }    
 
-    @GetMapping("/login")
+        @GetMapping("/login")
     public String login() {
         return "login";
     }

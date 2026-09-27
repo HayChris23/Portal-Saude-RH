@@ -1,33 +1,60 @@
 package br.com.portal.saudereh.model;
 
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "solicitacao")
 public class Solicitacao {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true)
     private String protocolo;
-    private String colaborador;
-    private String categoria;
+
+    @ManyToOne
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
+
+    @ManyToOne
+    @JoinColumn(name = "categoria_id", nullable = false)
+    private Categoria categoria;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String descricao;
+
+    @Column(nullable = false)
     private String status;
+
+    @Column(nullable = false)
     private LocalDateTime dataAbertura;
 
-    public Solicitacao() {
-    }
+    public Solicitacao() {}
 
     public Solicitacao(
             String protocolo,
-            String colaborador,
-            String categoria,
+            Usuario usuario,
+            Categoria categoria,
             String descricao,
             String status,
             LocalDateTime dataAbertura) {
 
         this.protocolo = protocolo;
-        this.colaborador = colaborador;
+        this.usuario = usuario;
         this.categoria = categoria;
         this.descricao = descricao;
         this.status = status;
         this.dataAbertura = dataAbertura;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getProtocolo() {
@@ -38,19 +65,19 @@ public class Solicitacao {
         this.protocolo = protocolo;
     }
 
-    public String getColaborador() {
-        return colaborador;
+    public Usuario getUsuario() {
+        return usuario;
     }
 
-    public void setColaborador(String colaborador) {
-        this.colaborador = colaborador;
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 
-    public String getCategoria() {
+    public Categoria getCategoria() {
         return categoria;
     }
 
-    public void setCategoria(String categoria) {
+    public void setCategoria(Categoria categoria) {
         this.categoria = categoria;
     }
 

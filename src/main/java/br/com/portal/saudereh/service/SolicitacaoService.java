@@ -1,53 +1,90 @@
 package br.com.portal.saudereh.service;
 
+import br.com.portal.saudereh.model.Categoria;
 import br.com.portal.saudereh.model.Solicitacao;
+import br.com.portal.saudereh.model.Usuario;
+import br.com.portal.saudereh.repository.CategoriaRepository;
+import br.com.portal.saudereh.repository.SolicitacaoRepository;
+import br.com.portal.saudereh.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class SolicitacaoService {
 
-    private final List<Solicitacao> solicitacoes = new ArrayList<>();
+    private final SolicitacaoRepository solicitacaoRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final CategoriaRepository categoriaRepository;
 
-    private int proximoNumero = 1;
+    public SolicitacaoService(
+            SolicitacaoRepository solicitacaoRepository,
+            UsuarioRepository usuarioRepository,
+            CategoriaRepository categoriaRepository) {
+
+        this.solicitacaoRepository = solicitacaoRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.categoriaRepository = categoriaRepository;
+    }
 
     public Solicitacao criarSolicitacao(
-            String categoria,
+            String categoriaNome,
             String descricao) {
 
+        Usuario usuario = usuarioRepository
+                .findByMatricula("HAYANE")
+                .orElseGet(() -> {
+                    Usuario novoUsuario = new Usuario();
+
+                    novoUsuario.setNome("Hayane");
+                    novoUsuario.setMatricula("HAYANE");
+                    novoUsuario.setEmail("hayane@findes.org.br");
+                    novoUsuario.setSenha("123456");
+                    novoUsuario.setPerfil("COLABORADOR");
+                    novoUsuario.setAtivo(true);
+
+                    return usuarioRepository.save(novoUsuario);
+                });
+
+        Categoria categoria = categoriaRepository
+                .findAll()
+                .stream()
+                .filter(c -> c.getNome().equalsIgnoreCase(categoriaNome))
+                .findFirst()
+                .orElseGet(() -> {
+                    Categoria novaCategoria = new Categoria();
+
+                    novaCategoria.setNome(categoriaNome);
+                    novaCategoria.setDescricao("Categoria de solicitação");
+                    novaCategoria.setAtivo(true);
+
+                    return categoriaRepository.save(novaCategoria);
+                });
+
         String ano = String.valueOf(LocalDateTime.now().getYear());
+
+        long numero = solicitacaoRepository.count() + 1;
 
         String protocolo = String.format(
                 "PSRH-%s-%06d",
                 ano,
-                proximoNumero
+                numero
         );
-
-        proximoNumero++;
 
         Solicitacao solicitacao = new Solicitacao();
 
         solicitacao.setProtocolo(protocolo);
-
-        solicitacao.setColaborador("Hayane");
-
+        solicitacao.setUsuario(usuario);
         solicitacao.setCategoria(categoria);
-
         solicitacao.setDescricao(descricao);
-
         solicitacao.setStatus("Aberta");
-
         solicitacao.setDataAbertura(LocalDateTime.now());
 
-        solicitacoes.add(solicitacao);
-
-        return solicitacao;
+        return solicitacaoRepository.save(solicitacao);
     }
 
     public List<Solicitacao> listarSolicitacoes() {
-        return solicitacoes;
+        return solicitacaoRepository.findAll();
     }
 }
