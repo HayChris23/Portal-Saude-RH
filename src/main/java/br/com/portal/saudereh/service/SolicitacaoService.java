@@ -17,15 +17,19 @@ public class SolicitacaoService {
     private final SolicitacaoRepository solicitacaoRepository;
     private final UsuarioRepository usuarioRepository;
     private final CategoriaRepository categoriaRepository;
+    private final AutenticacaoService autenticacaoService;
+    
 
     public SolicitacaoService(
             SolicitacaoRepository solicitacaoRepository,
             UsuarioRepository usuarioRepository,
-            CategoriaRepository categoriaRepository) {
+            CategoriaRepository categoriaRepository, 
+            AutenticacaoService autenticacaoService) {
 
         this.solicitacaoRepository = solicitacaoRepository;
         this.usuarioRepository = usuarioRepository;
         this.categoriaRepository = categoriaRepository;
+        this.autenticacaoService = autenticacaoService;
     }
 
     public Solicitacao criarSolicitacao(
@@ -40,8 +44,7 @@ public class SolicitacaoService {
                     novoUsuario.setNome("Hayane");
                     novoUsuario.setMatricula("HAYANE");
                     novoUsuario.setEmail("hayane@findes.org.br");
-                    novoUsuario.setSenha("123456");
-                    novoUsuario.setPerfil("COLABORADOR");
+                    novoUsuario.setSenha(autenticacaoService.criptografarSenha("123456"));
                     novoUsuario.setAtivo(true);
 
                     return usuarioRepository.save(novoUsuario);
