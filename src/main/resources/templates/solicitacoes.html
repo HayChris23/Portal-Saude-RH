@@ -1,0 +1,412 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitações | Portal Saúde RH</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: #f4f8fb;
+            color: #263238;
+        }
+
+        header {
+            background: white;
+            border-bottom: 1px solid #e1e8ee;
+            padding: 20px 35px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            color: #0066b3;
+            font-size: 21px;
+            font-weight: bold;
+        }
+
+        .logo span {
+            color: #263238;
+        }
+
+        .user {
+            color: #4c575f;
+            font-size: 14px;
+            text-align: right;
+        }
+
+        main {
+            max-width: 1250px;
+            margin: 35px auto;
+            padding: 0 25px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #71808a;
+            font-size: 14px;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .panel {
+            background: white;
+            border: 1px solid #dce5ec;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .field {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd8e2;
+            border-radius: 7px;
+            background: white;
+            font-size: 14px;
+        }
+
+        .button {
+            display: inline-block;
+            border: none;
+            border-radius: 7px;
+            padding: 12px 18px;
+            background: #0066b3;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            background: #004f8a;
+        }
+
+        .button.secondary {
+            background: white;
+            color: #0066b3;
+            border: 1px solid #0066b3;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 7px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .success {
+            background: #e6f5ef;
+            color: #006f49;
+        }
+
+        .error {
+            background: #fff0f0;
+            color: #b42318;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 14px 12px;
+            border-bottom: 1px solid #edf0ef;
+            vertical-align: middle;
+        }
+
+        th {
+            background: #f8fbfd;
+            color: #53636e;
+            white-space: nowrap;
+        }
+
+        .status {
+            display: inline-block;
+            border-radius: 20px;
+            padding: 6px 10px;
+            background: #eaf4fb;
+            color: #0066b3;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .status-form {
+            display: flex;
+            gap: 7px;
+            min-width: 230px;
+        }
+
+        .status-form select {
+            padding: 8px;
+            min-width: 125px;
+        }
+
+        .status-form button {
+            padding: 8px 10px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 30px;
+            color: #71808a;
+        }
+
+        .footer-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 22px;
+        }
+
+        @media (max-width: 600px) {
+            header {
+                padding: 18px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .user {
+                text-align: left;
+            }
+
+            main {
+                padding: 0 15px;
+                margin-top: 25px;
+            }
+
+            .panel {
+                padding: 16px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<header>
+    <div class="logo">Portal <span>Saúde RH</span></div>
+
+    <div class="user">
+        Olá, <strong th:text="${usuario.nome}">Usuário</strong>
+        <br>
+        <span th:text="${usuario.perfil}">Perfil</span>
+    </div>
+</header>
+
+<main>
+    <h1>Solicitações</h1>
+
+    <p class="subtitle"
+       th:if="${perfilAdministrativo}">
+        Consulte os protocolos, acompanhe os atendimentos e atualize os status.
+    </p>
+
+    <p class="subtitle"
+       th:unless="${perfilAdministrativo}">
+        Consulte seus próprios protocolos e acompanhe o andamento das solicitações.
+    </p>
+
+    <div th:if="${mensagem}" class="message success"
+         th:text="${mensagem}"></div>
+
+    <div th:if="${erro}" class="message error"
+         th:text="${erro}"></div>
+
+    <section class="panel">
+        <form th:action="@{/solicitacoes}" method="get" class="filters">
+            <div class="field">
+                <label for="protocolo">Número do protocolo</label>
+                <input type="text"
+                       id="protocolo"
+                       name="protocolo"
+                       placeholder="Ex.: PSRH-2026-000005"
+                       th:value="${protocolo}">
+            </div>
+
+            <div class="field">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="">Todos os status</option>
+                    <option value="Aberta"
+                            th:selected="${statusSelecionado == 'Aberta'}">
+                        Aberta
+                    </option>
+                    <option value="Em análise"
+                            th:selected="${statusSelecionado == 'Em análise'}">
+                        Em análise
+                    </option>
+                    <option value="Pendente"
+                            th:selected="${statusSelecionado == 'Pendente'}">
+                        Pendente
+                    </option>
+                    <option value="Concluída"
+                            th:selected="${statusSelecionado == 'Concluída'}">
+                        Concluída
+                    </option>
+                    <option value="Cancelada"
+                            th:selected="${statusSelecionado == 'Cancelada'}">
+                        Cancelada
+                    </option>
+                </select>
+            </div>
+
+            <button type="submit" class="button">Pesquisar</button>
+
+            <a th:href="@{/solicitacoes}" class="button secondary">
+                Limpar filtros
+            </a>
+        </form>
+    </section>
+
+    <section class="panel">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Protocolo</th>
+                    <th th:if="${perfilAdministrativo}">Colaborador</th>
+                    <th>Categoria</th>
+                    <th>Descrição</th>
+                    <th>Abertura</th>
+                    <th>Status atual</th>
+                    <th th:if="${perfilAdministrativo}">Atualizar status</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="solicitacao : ${solicitacoes}">
+                    <td th:text="${solicitacao.protocolo}">
+                        PSRH-2026-000001
+                    </td>
+
+                    <td th:if="${perfilAdministrativo}"
+                        th:text="${solicitacao.usuario.nome}">
+                        Colaborador
+                    </td>
+
+                    <td>
+                        <span th:switch="${solicitacao.categoria.nome}">
+                            <span th:case="'autorizacao'">Autorização de exame</span>
+                            <span th:case="'reembolso'">Reembolso</span>
+                            <span th:case="'renovacao'">Renovação de guia</span>
+                            <span th:case="'cartao'">Número/cartão do plano</span>
+                            <span th:case="'utilizacao'">Dúvida sobre utilização</span>
+                            <span th:case="'valores'">Dúvida sobre valores</span>
+                            <span th:case="'documentacao'">Documentação</span>
+                            <span th:case="'outros'">Outros</span>
+                            <span th:case="*"
+                                  th:text="${solicitacao.categoria.nome}">
+                                Categoria
+                            </span>
+                        </span>
+                    </td>
+
+                    <td th:text="${solicitacao.descricao}">Descrição</td>
+
+                    <td th:text="${#temporals.format(solicitacao.dataAbertura, 'dd/MM/yyyy HH:mm')}">
+                        10/10/2026 10:00
+                    </td>
+
+                    <td>
+                        <span class="status"
+                              th:text="${solicitacao.status}">
+                            Aberta
+                        </span>
+                    </td>
+
+                    <td th:if="${perfilAdministrativo}">
+                        <form th:action="@{/solicitacoes/{id}/status(id=${solicitacao.id})}"
+                              method="post"
+                              class="status-form">
+
+                            <select name="status" aria-label="Novo status">
+                                <option value="Aberta"
+                                        th:selected="${solicitacao.status == 'Aberta'}">
+                                    Aberta
+                                </option>
+                                <option value="Em análise"
+                                        th:selected="${solicitacao.status == 'Em análise'}">
+                                    Em análise
+                                </option>
+                                <option value="Pendente"
+                                        th:selected="${solicitacao.status == 'Pendente'}">
+                                    Pendente
+                                </option>
+                                <option value="Concluída"
+                                        th:selected="${solicitacao.status == 'Concluída'}">
+                                    Concluída
+                                </option>
+                                <option value="Cancelada"
+                                        th:selected="${solicitacao.status == 'Cancelada'}">
+                                    Cancelada
+                                </option>
+                            </select>
+
+                            <button type="submit" class="button">Salvar</button>
+                        </form>
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(solicitacoes)}">
+                    <td colspan="7" class="empty">
+                        Nenhuma solicitação encontrada para os filtros informados.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer-actions">
+            <a th:href="@{/portal}" class="button secondary">
+                Voltar ao portal
+            </a>
+        </div>
+    </section>
+</main>
+</body>
+</html>

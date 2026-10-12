@@ -22,25 +22,57 @@ public class InicializacaoService implements CommandLineRunner {
     @Override
     public void run(String... args) {
 
-        if (usuarioRepository.findByEmail("hayane@findes.org.br").isEmpty()) {
+        criarUsuarioSeNaoExistir(
+                "Hayane",
+                "HAYANE",
+                "hayane@findes.org.br",
+                "123456",
+                "COLABORADOR"
+        );
 
-            Usuario usuario = new Usuario();
+        criarUsuarioSeNaoExistir(
+                "Administrador do Plano",
+                "TESTE_ADM_PLANO",
+                "adm.plano.teste@portal.local",
+                "Teste@123",
+                "ADM_PLANO_SAUDE"
+        );
 
-            usuario.setNome("Hayane");
-            usuario.setMatricula("HAYANE");
-            usuario.setEmail("hayane@findes.org.br");
-            usuario.setSenha(
-                    autenticacaoService.criptografarSenha("123456")
-            );
-            usuario.setPerfil("COLABORADOR");
-            usuario.setAtivo(true);
+        criarUsuarioSeNaoExistir(
+                "Gestor de RH",
+                "TESTE_RH_GESTOR",
+                "rh.gestor.teste@portal.local",
+                "Teste@123",
+                "RH_GESTOR"
+        );
+    }
 
-            usuarioRepository.save(usuario);
+    private void criarUsuarioSeNaoExistir(
+            String nome,
+            String matricula,
+            String email,
+            String senha,
+            String perfil) {
 
-            System.out.println("======================================");
-            System.out.println("USUARIO DE TESTE CRIADO COM SUCESSO");
-            System.out.println("E-mail: hayane@findes.org.br");
-            System.out.println("======================================");
+        if (usuarioRepository.findByEmail(email).isPresent()
+                || usuarioRepository.findByMatricula(matricula).isPresent()) {
+            System.out.println("Usuário já cadastrado: " + email);
+            return;
         }
+
+        Usuario usuario = new Usuario();
+        usuario.setNome(nome);
+        usuario.setMatricula(matricula);
+        usuario.setEmail(email);
+        usuario.setSenha(
+                autenticacaoService.criptografarSenha(senha)
+        );
+        usuario.setPerfil(perfil);
+        usuario.setAtivo(true);
+
+        usuarioRepository.save(usuario);
+
+        System.out.println("Usuário de teste criado: " + email);
+        System.out.println("Perfil: " + perfil);
     }
 }

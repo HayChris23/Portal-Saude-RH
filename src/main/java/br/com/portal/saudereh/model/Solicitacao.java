@@ -14,11 +14,11 @@ public class Solicitacao {
     @Column(nullable = false, unique = true)
     private String protocolo;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
 
@@ -26,27 +26,15 @@ public class Solicitacao {
     private String descricao;
 
     @Column(nullable = false)
-    private String status;
+    private String status = "Aberta";
+
+    @Column(name = "data_abertura", nullable = false)
+    private LocalDateTime dataAbertura = LocalDateTime.now();
 
     @Column(nullable = false)
-    private LocalDateTime dataAbertura;
+    private Boolean ativo = true;
 
-    public Solicitacao() {}
-
-    public Solicitacao(
-            String protocolo,
-            Usuario usuario,
-            Categoria categoria,
-            String descricao,
-            String status,
-            LocalDateTime dataAbertura) {
-
-        this.protocolo = protocolo;
-        this.usuario = usuario;
-        this.categoria = categoria;
-        this.descricao = descricao;
-        this.status = status;
-        this.dataAbertura = dataAbertura;
+    public Solicitacao() {
     }
 
     public Long getId() {
@@ -103,5 +91,13 @@ public class Solicitacao {
 
     public void setDataAbertura(LocalDateTime dataAbertura) {
         this.dataAbertura = dataAbertura;
+    }
+
+    public Boolean getAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(Boolean ativo) {
+        this.ativo = ativo;
     }
 }

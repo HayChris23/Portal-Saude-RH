@@ -1,15 +1,11 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Nova Solicitação | Portal Saúde RH</title>
 
     <style>
-
         * {
             margin: 0;
             padding: 0;
@@ -22,20 +18,14 @@
             color: #263238;
         }
 
-        /* =========================
-           HEADER
-        ========================= */
-
         header {
-            height: 72px;
+            min-height: 72px;
             background: white;
             border-bottom: 1px solid #e1e8ee;
-
             display: flex;
             align-items: center;
             justify-content: space-between;
-
-            padding: 0 45px;
+            padding: 12px 45px;
         }
 
         .logo {
@@ -58,65 +48,42 @@
         .avatar {
             width: 38px;
             height: 38px;
-
             border-radius: 50%;
-
             background: #0066b3;
             color: white;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
             font-weight: bold;
         }
-
-        /* =========================
-           LAYOUT
-        ========================= */
 
         .layout {
             display: flex;
             min-height: calc(100vh - 72px);
         }
 
-        /* =========================
-           SIDEBAR
-        ========================= */
-
         .sidebar {
-            width: 235px;
-
+            flex: 0 0 235px;
             background: white;
             border-right: 1px solid #e1e8ee;
-
             padding: 30px 18px;
         }
 
         .menu-title {
             font-size: 12px;
             color: #8a969f;
-
             text-transform: uppercase;
-
             margin: 0 12px 12px;
         }
 
         .menu-item {
             display: block;
-
             padding: 13px 14px;
-
             margin-bottom: 6px;
-
             border-radius: 8px;
-
             text-decoration: none;
-
             color: #4c575f;
-
             font-size: 14px;
-
             transition: 0.2s;
         }
 
@@ -131,22 +98,16 @@
             font-weight: bold;
         }
 
-        /* =========================
-           MAIN
-        ========================= */
-
         main {
             flex: 1;
-
+            min-width: 0;
             padding: 38px 45px;
-
             max-width: 1150px;
         }
 
         .breadcrumb {
             font-size: 13px;
             color: #7c898f;
-
             margin-bottom: 25px;
         }
 
@@ -172,23 +133,15 @@
         .page-title p {
             color: #71808a;
             font-size: 14px;
+            line-height: 1.5;
         }
-
-        /* =========================
-           FORMULÁRIO
-        ========================= */
 
         .form-container {
             background: white;
-
             border: 1px solid #dce5ec;
-
             border-radius: 14px;
-
             padding: 32px;
-
             max-width: 950px;
-
             box-shadow: 0 4px 15px rgba(0, 80, 140, 0.06);
         }
 
@@ -198,13 +151,9 @@
 
         label {
             display: block;
-
             font-size: 14px;
-
             font-weight: 600;
-
             margin-bottom: 8px;
-
             color: #30404c;
         }
 
@@ -215,21 +164,13 @@
         select,
         textarea,
         input[type="file"] {
-
             width: 100%;
-
             border: 1px solid #cbd8e2;
-
             border-radius: 8px;
-
             padding: 13px;
-
             font-size: 14px;
-
             background: white;
-
             color: #263238;
-
             transition: 0.2s;
         }
 
@@ -238,126 +179,89 @@
         }
 
         select:focus,
-        textarea:focus {
-
-            outline: none;
-
-            border-color: #0066b3;
-
-            box-shadow: 0 0 0 3px #eaf4fb;
-        }
-
-        textarea {
-
-            min-height: 150px;
-
-            resize: vertical;
-        }
-
-        /* =========================
-           ANEXO
-        ========================= */
-
-        input[type="file"] {
-            background: #f8fbfd;
-            cursor: pointer;
-        }
-
+        textarea:focus,
         input[type="file"]:focus {
             outline: none;
             border-color: #0066b3;
             box-shadow: 0 0 0 3px #eaf4fb;
         }
 
-        .file-help {
-            margin-top: 8px;
-
-            font-size: 12px;
-
-            color: #7c898f;
+        textarea {
+            min-height: 150px;
+            resize: vertical;
         }
 
-        /* =========================
-           BOTÕES
-        ========================= */
+        input[type="file"] {
+            background: #f8fbfd;
+            cursor: pointer;
+        }
+
+        .file-help {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #7c898f;
+            line-height: 1.6;
+        }
 
         .form-actions {
-
             display: flex;
-
             justify-content: flex-end;
-
             align-items: center;
-
             gap: 12px;
-
             margin-top: 30px;
         }
 
-        .cancel-button {
-
+        .cancel-button,
+        .submit-button {
             display: inline-block;
-
             padding: 12px 22px;
-
             border-radius: 8px;
-
-            border: 1px solid #0066b3;
-
-            background: white;
-
-            color: #0066b3;
-
-            text-decoration: none;
-
             font-size: 14px;
-
             font-weight: 600;
-
+            text-align: center;
             cursor: pointer;
-
+            text-decoration: none;
             transition: 0.2s;
         }
 
-        .cancel-button:hover {
+        .cancel-button {
+            border: 1px solid #0066b3;
+            background: white;
+            color: #0066b3;
+        }
 
+        .cancel-button:hover {
             background: #eaf4fb;
         }
 
         .submit-button {
-
-            padding: 12px 24px;
-
-            border-radius: 8px;
-
             border: none;
-
             background: #0066b3;
-
             color: white;
-
-            font-size: 14px;
-
-            font-weight: 600;
-
-            cursor: pointer;
-
-            transition: 0.2s;
         }
 
         .submit-button:hover {
-
             background: #004f8a;
         }
 
-        /* =========================
-           RESPONSIVO
-        ========================= */
+        .menu-disabled {
+            opacity: 0.65;
+            cursor: default;
+        }
+
+        .error-message {
+            background: #fff0f0;
+            color: #a52828;
+            border: 1px solid #f0caca;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
 
         @media (max-width: 700px) {
-
             header {
-                padding: 0 20px;
+                padding: 12px 20px;
             }
 
             .sidebar {
@@ -372,243 +276,179 @@
                 padding: 22px;
             }
 
+            .page-title h1 {
+                font-size: 24px;
+            }
+
             .form-actions {
-
                 flex-direction: column-reverse;
-
                 align-items: stretch;
             }
 
             .cancel-button,
             .submit-button {
-
                 width: 100%;
-
-                text-align: center;
-
             }
-
         }
-
     </style>
-
 </head>
-
 
 <body>
 
 <header>
-
     <div class="logo">
         Portal <span>Saúde RH</span>
     </div>
 
     <div class="user-area">
+        <span th:text="${session.usuario != null ? session.usuario.nome : 'Colaborador'}">
+            Colaborador
+        </span>
 
-        <span>Hayane</span>
-
-        <div class="avatar">
-            H
+        <div class="avatar"
+             th:text="${session.usuario != null ? #strings.substring(session.usuario.nome, 0, 1).toUpperCase() : 'C'}">
+            C
         </div>
-
     </div>
-
 </header>
-
 
 <div class="layout">
 
-
-    <!-- MENU -->
-
     <aside class="sidebar">
+        <div class="menu-title">Menu</div>
 
-        <div class="menu-title">
-            Menu
-        </div>
-
-        <a href="/portal" class="menu-item">
+        <a th:href="@{/portal}" class="menu-item">
             🏠 Início
         </a>
 
-        <a href="/nova-solicitacao" class="menu-item active">
+        <a th:href="@{/nova-solicitacao}" class="menu-item active">
             ➕ Nova Solicitação
         </a>
 
-        <a href="#" class="menu-item">
+        <a th:href="@{/solicitacoes}" class="menu-item">
             📋 Minhas Solicitações
         </a>
 
-        <a href="#" class="menu-item">
+        <a href="#" class="menu-item menu-disabled"
+           title="Funcionalidade em desenvolvimento">
             🤖 Assistente Saúde RH
         </a>
-
     </aside>
-
-
-    <!-- CONTEÚDO -->
 
     <main>
 
         <div class="breadcrumb">
-
-            <a href="/portal">Início</a>
-
+            <a th:href="@{/portal}">Início</a>
             &nbsp; / &nbsp;
-
             Nova Solicitação
-
         </div>
-
 
         <div class="page-title">
-
-            <h1>
-                Nova Solicitação
-            </h1>
+            <h1>Nova Solicitação</h1>
 
             <p>
-                Informe os dados abaixo para registrar uma solicitação relacionada ao seu plano de saúde.
+                Informe os dados abaixo para registrar uma solicitação
+                relacionada ao seu plano de saúde.
             </p>
-
         </div>
-
 
         <div class="form-container">
 
-            <form action="/solicitacao/salvar"
+            <div class="error-message"
+                 th:if="${erro != null}"
+                 th:text="${erro}"
+                 role="alert">
+                Ocorreu um erro ao registrar a solicitação.
+            </div>
+
+            <form th:action="@{/solicitacao/salvar}"
                   method="post"
                   enctype="multipart/form-data">
 
-
-                <!-- CATEGORIA -->
-
                 <div class="form-group">
-
                     <label for="categoria">
-
-                        Categoria
-
-                        <span class="required">*</span>
-
+                        Categoria <span class="required">*</span>
                     </label>
 
-
-                    <select
-                        id="categoria"
-                        name="categoria"
-                        required>
+                    <select id="categoria"
+                            name="categoria"
+                            required>
 
                         <option value="">
                             Selecione uma categoria
                         </option>
 
-                        <option value="autorizacao">
+                        <option value="Autorização de exame">
                             Autorização de exame
                         </option>
 
-                        <option value="renovacao">
+                        <option value="Renovação de guia">
                             Renovação de guia
                         </option>
 
-                        <option value="cartao">
+                        <option value="Número/cartão do plano">
                             Número/cartão do plano
                         </option>
 
-                        <option value="utilizacao">
+                        <option value="Dúvida sobre utilização">
                             Dúvida sobre utilização
                         </option>
 
-                        <option value="valores">
+                        <option value="Dúvida sobre valores">
                             Dúvida sobre valores
                         </option>
 
-                        <option value="documentacao">
+                        <option value="Documentação">
                             Documentação
                         </option>
 
-                        <option value="outros">
+                        <option value="Outros">
                             Outros
                         </option>
 
                     </select>
-
                 </div>
 
-
-                <!-- DESCRIÇÃO -->
-
                 <div class="form-group">
-
                     <label for="descricao">
-
                         Descrição da solicitação
-
                         <span class="required">*</span>
-
                     </label>
 
-
-                    <textarea
-                        id="descricao"
-                        name="descricao"
-                        placeholder="Descreva sua solicitação com o máximo de detalhes possível..."
-                        required></textarea>
-
+                    <textarea id="descricao"
+                              name="descricao"
+                              placeholder="Descreva sua solicitação com o máximo de detalhes possível..."
+                              maxlength="3000"
+                              required></textarea>
                 </div>
 
-
-                <!-- DOCUMENTO -->
-
                 <div class="form-group">
-
                     <label for="arquivo">
                         Anexar documento
                     </label>
 
-
-                    <input
-                        type="file"
-                        id="arquivo"
-                        name="arquivo"
-                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                    >
-
+                    <input type="file"
+                           id="arquivo"
+                           name="arquivo"
+                           accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
 
                     <div class="file-help">
-
-                        Formatos permitidos: PDF, JPG, PNG, DOC e DOCX.
+                        Formatos permitidos: PDF, JPG, JPEG, PNG, DOC e DOCX.
                         <br>
-                        Caso necessário, anexe um documento para complementar sua solicitação.
-
+                        Caso necessário, anexe um documento para complementar
+                        sua solicitação.
                     </div>
-
                 </div>
-
-
-                <!-- BOTÕES -->
 
                 <div class="form-actions">
-
-                    <a
-                        href="/portal"
-                        class="cancel-button">
-
+                    <a th:href="@{/portal}" class="cancel-button">
                         Cancelar
-
                     </a>
 
-
-                    <button
-                        type="submit"
-                        class="submit-button">
-
+                    <button type="submit" class="submit-button">
                         Enviar Solicitação
-
                     </button>
-
                 </div>
-
 
             </form>
 
@@ -619,5 +459,4 @@
 </div>
 
 </body>
-
 </html>

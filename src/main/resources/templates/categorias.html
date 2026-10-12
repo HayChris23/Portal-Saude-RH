@@ -1,0 +1,290 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Categorias | Portal Saúde RH</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f4f7f6;
+            color: #263238;
+        }
+
+        header {
+            background: white;
+            padding: 22px 35px;
+            border-bottom: 1px solid #e3e8e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            color: #00875a;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 35px auto;
+            padding: 0 20px;
+        }
+
+        .painel {
+            background: white;
+            padding: 28px;
+            border-radius: 12px;
+            border: 1px solid #e3e8e6;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 26px;
+        }
+
+        h2 {
+            font-size: 19px;
+        }
+
+        label {
+            display: block;
+            margin: 16px 0 7px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccd5d1;
+            border-radius: 7px;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button, .voltar {
+            display: inline-block;
+            margin-top: 18px;
+            padding: 11px 17px;
+            border: none;
+            border-radius: 7px;
+            background: #00875a;
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .mensagem {
+            padding: 12px;
+            margin-bottom: 15px;
+            background: #e6f5ef;
+            color: #006b47;
+            border-radius: 7px;
+        }
+
+        .erro {
+            padding: 12px;
+            margin-bottom: 15px;
+            background: #fdecea;
+            color: #a12622;
+            border-radius: 7px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 18px;
+        }
+
+        th, td {
+            padding: 13px 10px;
+            border-bottom: 1px solid #e3e8e6;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f4f7f6;
+        }
+
+        .acao {
+            display: inline-block;
+            margin: 3px;
+            padding: 8px 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .editar {
+            background: #eaf4fb;
+            color: #005a9c;
+        }
+
+        .desativar {
+            background: #fdecea;
+            color: #a12622;
+        }
+
+        .desativar-form {
+            display: inline;
+        }
+
+        .desativar-form button {
+            margin: 3px;
+            padding: 8px 10px;
+            background: #fdecea;
+            color: #a12622;
+            font-size: 12px;
+        }
+
+        .status-inativo {
+            color: #a12622;
+        }
+
+        .status-ativo {
+            color: #00875a;
+        }
+
+        @media (max-width: 650px) {
+            header {
+                padding: 18px;
+            }
+
+            .painel {
+                padding: 18px;
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 600px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">Portal Saúde RH</div>
+    <div th:text="${usuario.nome}">Colaborador</div>
+</header>
+
+<main>
+    <h1>Gerenciar categorias</h1>
+    <p>Cadastre, consulte, edite e desative categorias de solicitações.</p>
+
+    <a href="/portal" class="voltar">Voltar ao portal</a>
+
+    <section class="painel">
+        <h2 th:text="${categoria.id == null ? 'Nova categoria' : 'Editar categoria'}">
+            Nova categoria
+        </h2>
+
+        <div class="mensagem" th:if="${mensagem}" th:text="${mensagem}"></div>
+        <div class="erro" th:if="${erro}" th:text="${erro}"></div>
+
+        <form action="/categorias/salvar" method="post">
+            <input type="hidden" name="id" th:value="${categoria.id}">
+
+            <label for="nome">Nome da categoria *</label>
+            <input
+                id="nome"
+                type="text"
+                name="nome"
+                maxlength="100"
+                required
+                th:value="${categoria.nome}"
+                placeholder="Ex.: Autorização de exame">
+
+            <label for="descricao">Descrição</label>
+            <textarea
+                id="descricao"
+                name="descricao"
+                maxlength="500"
+                th:text="${categoria.descricao}"
+                placeholder="Descreva a finalidade da categoria"></textarea>
+
+            <button type="submit">Salvar categoria</button>
+
+            <a
+                th:if="${categoria.id != null}"
+                href="/categorias"
+                class="voltar">
+                Cancelar edição
+            </a>
+        </form>
+    </section>
+
+    <section class="painel">
+        <h2>Categorias cadastradas</h2>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Descrição</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="item : ${categorias}">
+                <td th:text="${item.nome}">Categoria</td>
+                <td th:text="${item.descricao}">Descrição</td>
+
+                <td>
+                    <span
+                        th:if="${item.ativo}"
+                        class="status-ativo">Ativa</span>
+                    <span
+                        th:unless="${item.ativo}"
+                        class="status-inativo">Inativa</span>
+                </td>
+
+                <td>
+                    <a
+                        th:if="${item.ativo}"
+                        th:href="@{/categorias/editar/{id}(id=${item.id})}"
+                        class="acao editar">Editar</a>
+
+                    <form
+                        th:if="${item.ativo}"
+                        th:action="@{/categorias/desativar/{id}(id=${item.id})}"
+                        method="post"
+                        class="desativar-form"
+                        onsubmit="return confirm('Deseja realmente desativar esta categoria?')">
+
+                        <button type="submit">Desativar</button>
+                    </form>
+
+                    <span th:unless="${item.ativo}">Sem ações</span>
+                </td>
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(categorias)}">
+                <td colspan="4">Nenhuma categoria cadastrada.</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+
+</body>
+</html>
