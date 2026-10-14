@@ -350,6 +350,7 @@
         <!-- Menu do gestor -->
         <div th:if="${usuario.perfil == 'RH_GESTOR'}">
             <a th:href="@{/solicitacoes}" class="menu-item">📊 Acompanhamento de Solicitações</a>
+            <a th:href="@{/dashboard}" class="menu-item"> 📈 Dashboard de Indicadores</a>
             <a th:href="@{/categorias}" class="menu-item">⚙️ Categorias de Solicitação</a>
         </div>
     </aside>

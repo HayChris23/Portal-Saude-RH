@@ -7,6 +7,8 @@ import br.com.portal.saudereh.model.Usuario;
 import br.com.portal.saudereh.service.AutenticacaoService;
 import br.com.portal.saudereh.service.CategoriaService;
 import br.com.portal.saudereh.service.SolicitacaoService;
+import br.com.portal.saudereh.service.DashboardService;
+import br.com.portal.saudereh.service.HistoricoSolicitacaoService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -19,6 +21,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.LocalDate;
 
 import java.util.List;
 
@@ -32,15 +36,21 @@ public class HomeController {
     private final SolicitacaoService solicitacaoService;
     private final AutenticacaoService autenticacaoService;
     private final CategoriaService categoriaService;
+    private final DashboardService dashboardService;
+    private final HistoricoSolicitacaoService historicoSolicitacaoService;
 
     public HomeController(
             SolicitacaoService solicitacaoService,
             AutenticacaoService autenticacaoService,
-            CategoriaService categoriaService) {
+            CategoriaService categoriaService,
+            DashboardService dashboardService,
+            HistoricoSolicitacaoService historicoSolicitacaoService) {
 
         this.solicitacaoService = solicitacaoService;
         this.autenticacaoService = autenticacaoService;
         this.categoriaService = categoriaService;
+        this.dashboardService = dashboardService;
+        this.historicoSolicitacaoService = historicoSolicitacaoService;
     }
 
     @GetMapping("/")
@@ -269,66 +279,72 @@ public class HomeController {
         return "redirect:/categorias";
     }
 
+    // Pesquisa solicitações usando filtros opcionais.
     // Colaboradores consultam somente suas solicitações.
     // Perfis administrativos podem consultar todas.
     @GetMapping("/solicitacoes")
-    public String listarSolicitacoes(
-            @RequestParam(required = false) String protocolo,
-            @RequestParam(required = false) String status,
-            HttpSession session,
-            Model model,
-            RedirectAttributes redirectAttributes) {
+public String listarSolicitacoes(
+        @RequestParam(required = false) String protocolo,
+        @RequestParam(required = false) String status,
+        @RequestParam(required = false) Long categoriaId,
+        @RequestParam(required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        LocalDate dataInicial,
+        @RequestParam(required = false)
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        LocalDate dataFinal,
+        HttpSession session,
+        Model model,
+        RedirectAttributes redirectAttributes) {
 
-        Usuario usuario = usuarioLogado(session);
+    Usuario usuario = usuarioLogado(session);
 
-        if (usuario == null) {
-            return "redirect:/login";
-        }
-
-        boolean administrativo = podeAdministrar(usuario);
-        List<Solicitacao> solicitacoes;
-
-        if (protocolo != null && !protocolo.isBlank()) {
-            try {
-                Solicitacao solicitacao;
-
-                if (administrativo) {
-                    solicitacao =
-                            solicitacaoService.buscarPorProtocolo(protocolo);
-                } else {
-                    solicitacao =
-                            solicitacaoService.buscarPorProtocoloDoUsuario(
-                                    protocolo,
-                                    usuario.getId()
-                            );
-                }
-
-                solicitacoes = List.of(solicitacao);
-
-            } catch (IllegalArgumentException e) {
-                solicitacoes = List.of();
-                model.addAttribute("erro", e.getMessage());
-            }
-
-        } else if (administrativo) {
-            solicitacoes = solicitacaoService.listarPorStatus(status);
-
-        } else {
-            solicitacoes =
-                    solicitacaoService.listarSolicitacoesDoUsuarioPorStatus(
-                            usuario.getId(),
-                            status
-                    );
-        }
-
-        model.addAttribute("usuario", usuario);
-        model.addAttribute("solicitacoes", solicitacoes);
-        model.addAttribute("protocolo", protocolo);
-        model.addAttribute("statusSelecionado", status);
-        model.addAttribute("perfilAdministrativo", administrativo);
-
-        return "solicitacoes";
+    if (usuario == null) {
+        return "redirect:/login";
     }
+
+    boolean administrativo = podeAdministrar(usuario);
+
+    // O colaborador só poderá pesquisar as próprias solicitações.
+    Long usuarioIdPesquisa = administrativo ? null : usuario.getId();
+
+    List<Solicitacao> solicitacoes;
+
+    try {
+        solicitacoes = solicitacaoService.pesquisarAvancado(
+                protocolo,
+                status,
+                categoriaId,
+                dataInicial,
+                dataFinal,
+                usuarioIdPesquisa
+        );
+        System.out.println("TESTE 1: Pesquisa de solicitações concluída.");
+
+    } catch (IllegalArgumentException e) {
+        solicitacoes = List.of();
+        model.addAttribute("erro", e.getMessage());
+    }
+
+    // Disponibiliza somente categorias ativas no filtro.
+    List<Categoria> categoriasAtivas = categoriaService.listarTodas()
+            .stream()
+            .filter(c -> Boolean.TRUE.equals(c.getAtivo()))
+            .toList();
+    System.out.println("TESTE 2: Categorias carregadas.");
+
+    model.addAttribute("usuario", usuario);
+    model.addAttribute("solicitacoes", solicitacoes);
+    model.addAttribute("categorias", categoriasAtivas);
+    model.addAttribute("protocolo", protocolo);
+    model.addAttribute("statusSelecionado", status);
+    model.addAttribute("categoriaSelecionada", categoriaId);
+    model.addAttribute("dataInicial", dataInicial);
+    model.addAttribute("dataFinal", dataFinal);
+    model.addAttribute("perfilAdministrativo", administrativo);
+System.out.println("TESTE 3: Preparando a página solicitacoes.");
+    return "solicitacoes";
+}
 
     // Somente perfis administrativos podem atualizar status.
     @PostMapping("/solicitacoes/{id}/status")
@@ -366,6 +382,111 @@ public class HomeController {
         return "redirect:/solicitacoes";
     }
 
+
+    @GetMapping("/solicitacoes/{id}/historico")
+    public String consultarHistorico(
+        @PathVariable Long id,
+        HttpSession session,
+        Model model,
+        RedirectAttributes redirectAttributes) {
+
+    Usuario usuario = usuarioLogado(session);
+
+    if (usuario == null) {
+        return "redirect:/login";
+    }
+
+    try {
+        Solicitacao solicitacao = solicitacaoService.buscarPorId(id);
+
+        boolean administrativo = podeAdministrar(usuario);
+
+        boolean donoDaSolicitacao =
+                solicitacao.getUsuario() != null
+                && solicitacao.getUsuario().getId() != null
+                && solicitacao.getUsuario().getId().equals(usuario.getId());
+
+        if (!administrativo && !donoDaSolicitacao) {
+            redirectAttributes.addFlashAttribute(
+                    "erro",
+                    "Você não tem permissão para consultar este histórico."
+            );
+            return "redirect:/solicitacoes";
+        }
+
+        model.addAttribute("usuario", usuario);
+        model.addAttribute("solicitacao", solicitacao);
+        model.addAttribute(
+                "historicos",
+                historicoSolicitacaoService.listarPorSolicitacao(id)
+        );
+
+        return "historico-solicitacao";
+
+    } catch (IllegalArgumentException e) {
+        redirectAttributes.addFlashAttribute("erro", e.getMessage());
+        return "redirect:/solicitacoes";
+    }
+}
+        
+    @GetMapping("/dashboard")
+    public String dashboard(HttpSession session, Model model) {
+    Usuario usuario = (Usuario) session.getAttribute("usuario");
+
+    if (usuario == null) {
+        return "redirect:/login";
+    }
+
+    model.addAttribute("totalSolicitacoes",
+        dashboardService.getTotalSolicitacoes());
+
+    model.addAttribute("solicitacoesAbertas",
+        dashboardService.getSolicitacoesAbertas());
+
+    model.addAttribute("solicitacoesEmAnalise",
+        dashboardService.getSolicitacoesEmAnalise()
+    );
+
+    model.addAttribute("solicitacoesConcluidas",
+        dashboardService.getSolicitacoesConcluidas()
+    );
+
+    model.addAttribute("solicitacoesCanceladas",
+        dashboardService.getSolicitacoesCanceladas()
+    );
+
+    model.addAttribute("solicitacoesPorStatus",
+        dashboardService.getSolicitacoesPorStatus()
+    );
+
+    model.addAttribute("solicitacoesPorCategoria",
+        dashboardService.getSolicitacoesPorCategoria()
+    );
+
+    model.addAttribute(
+    "solicitacoesPendentes",
+    dashboardService.getSolicitacoesPendentes()
+    );
+
+System.out.println("========== DASHBOARD ==========");
+
+for (Object[] item : dashboardService.getSolicitacoesPorStatus()) {
+    System.out.println(
+        "Status: [" + item[0] + "] | Quantidade: [" + item[1] + "]"
+    );
+}
+
+System.out.println("Total: " + dashboardService.getTotalSolicitacoes());
+System.out.println("Abertas: " + dashboardService.getSolicitacoesAbertas());
+System.out.println("Em análise: " + dashboardService.getSolicitacoesEmAnalise());
+System.out.println("Concluídas: " + dashboardService.getSolicitacoesConcluidas());
+System.out.println("Canceladas: " + dashboardService.getSolicitacoesCanceladas());
+
+System.out.println("===============================");
+
+return "dashboard";
+}
+
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
@@ -386,4 +507,5 @@ public class HomeController {
         return ADM_PLANO_SAUDE.equals(perfil)
                 || RH_GESTOR.equals(perfil);
     }
+
 }

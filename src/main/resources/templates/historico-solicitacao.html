@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Histórico da Solicitação | Portal Saúde RH</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #263238;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .cabecalho {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            color: #17365d;
+        }
+
+        .subtitulo {
+            color: #64748b;
+            margin: 0;
+        }
+
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 10px;
+            margin-bottom: 22px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .dados {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .campo strong {
+            display: block;
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .campo span {
+            overflow-wrap: anywhere;
+        }
+
+        .descricao {
+            margin-top: 22px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .tabela-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 13px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #17365d;
+            color: white;
+            font-size: 13px;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        .botao {
+            display: inline-block;
+            padding: 11px 17px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+
+        .botao-voltar {
+            background: #17365d;
+            color: white;
+        }
+
+        .vazio {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+        }
+
+        @media (max-width: 650px) {
+            body {
+                padding: 16px;
+            }
+
+            .dados {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 17px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <div class="cabecalho">
+        <div>
+            <h1>Histórico da Solicitação</h1>
+            <p class="subtitulo">
+                Consulte as movimentações registradas no Portal Saúde RH.
+            </p>
+        </div>
+
+        <a th:href="@{/solicitacoes}" class="botao botao-voltar">
+            Voltar às solicitações
+        </a>
+    </div>
+
+    <section class="card">
+        <h2>Dados da solicitação</h2>
+
+        <div class="dados">
+            <div class="campo">
+                <strong>Protocolo</strong>
+                <span th:text="${solicitacao.protocolo}">PSRH-000000</span>
+            </div>
+
+            <div class="campo">
+                <strong>Categoria</strong>
+                <span th:text="${solicitacao.categoria != null ? solicitacao.categoria.nome : 'Não informada'}">
+                    Categoria
+                </span>
+            </div>
+
+            <div class="campo">
+                <strong>Status atual</strong>
+                <span th:text="${solicitacao.status}">Aberta</span>
+            </div>
+
+            <div class="campo">
+                <strong>Data de abertura</strong>
+                <span th:text="${solicitacao.dataAbertura != null ? #temporals.format(solicitacao.dataAbertura, 'dd/MM/yyyy HH:mm') : 'Não informada'}">
+                    01/01/2026
+                </span>
+            </div>
+        </div>
+
+        <div class="descricao">
+            <strong>Descrição:</strong>
+            <p th:text="${solicitacao.descricao}"></p>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Movimentações registradas</h2>
+
+        <div class="tabela-container">
+            <table>
+                <thead>
+                <tr>
+                    <th>Data e hora</th>
+                    <th>Ação</th>
+                    <th>Responsável</th>
+                    <th>Status anterior</th>
+                    <th>Novo status</th>
+                    <th>Observação</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="historico : ${historicos}">
+                    <td th:text="${historico.dataHora != null ? #temporals.format(historico.dataHora, 'dd/MM/yyyy HH:mm') : '—'}">
+                        01/01/2026 10:00
+                    </td>
+
+                    <td th:text="${historico.acao ?: '—'}">
+                        Alteração de status
+                    </td>
+
+                    <td th:text="${historico.usuario != null ? (historico.usuario.nome ?: 'Não informado') : 'Sistema'}">
+                        Responsável
+                    </td>
+
+                    <td th:text="${historico.statusAnterior ?: '—'}">
+                        Aberta
+                    </td>
+
+                    <td th:text="${historico.novoStatus ?: '—'}">
+                        Em análise
+                    </td>
+
+                    <td th:text="${historico.observacao ?: '—'}">
+                        Observação
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(historicos)}">
+                    <td colspan="6" class="vazio">
+                        Nenhuma movimentação foi registrada para esta solicitação.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</div>
+</body>
+</html>

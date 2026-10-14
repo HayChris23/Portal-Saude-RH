@@ -12,6 +12,7 @@ import br.com.portal.saudereh.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -35,62 +36,83 @@ public class SolicitacaoService {
         this.categoriaRepository = categoriaRepository;
     }
 
-    @Transactional
-    public Solicitacao criarSolicitacao(
-            Usuario usuarioAutenticado,
-            String categoriaNome,
-            String descricao) {
+   
+        @Transactional 
+        public Solicitacao criarSolicitacao(
+        Usuario usuarioAutenticado,
+        String categoriaNome,
+        String descricao) {
 
-        if (usuarioAutenticado == null
-                || usuarioAutenticado.getId() == null) {
-            throw new IllegalArgumentException(
-                    "Usuário autenticado não identificado.");
-        }
-
-        Usuario usuario = usuarioRepository
-                .findById(usuarioAutenticado.getId())
-                .filter(u -> Boolean.TRUE.equals(u.getAtivo()))
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Usuário não encontrado ou inativo."));
-
-        if (descricao == null || descricao.isBlank()) {
-            throw new IllegalArgumentException(
-                    "A descrição da solicitação é obrigatória.");
-        }
-
-        if (categoriaNome == null || categoriaNome.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Selecione uma categoria válida.");
-        }
-
-        Categoria categoria = categoriaRepository
-                .findByNomeIgnoreCase(categoriaNome.trim())
-                .filter(c -> Boolean.TRUE.equals(c.getAtivo()))
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Categoria não encontrada ou inativa."));
-
-        String ano = String.valueOf(LocalDateTime.now().getYear());
-        long numero = solicitacaoRepository.count() + 1;
-
-        String protocolo = String.format(
-                "PSRH-%s-%06d",
-                ano,
-                numero
-        );
-
-        Solicitacao solicitacao = new Solicitacao();
-        solicitacao.setProtocolo(protocolo);
-        solicitacao.setUsuario(usuario);
-        solicitacao.setCategoria(categoria);
-        solicitacao.setDescricao(descricao.trim());
-        solicitacao.setStatus("Aberta");
-        solicitacao.setDataAbertura(LocalDateTime.now());
-        solicitacao.setAtivo(true);
-
-        return solicitacaoRepository.save(solicitacao);
+    if (usuarioAutenticado == null
+            || usuarioAutenticado.getId() == null) {
+        throw new IllegalArgumentException(
+                "Usuário autenticado não identificado.");
     }
 
-    // Lista somente solicitações ativas.
+    Usuario usuario = usuarioRepository
+            .findById(usuarioAutenticado.getId())
+            .filter(u -> Boolean.TRUE.equals(u.getAtivo()))
+            .orElseThrow(() -> new IllegalArgumentException(
+                    "Usuário não encontrado ou inativo."));
+
+    if (descricao == null || descricao.isBlank()) {
+        throw new IllegalArgumentException(
+                "A descrição da solicitação é obrigatória.");
+    }
+
+    if (categoriaNome == null || categoriaNome.isBlank()) {
+        throw new IllegalArgumentException(
+                "Selecione uma categoria válida.");
+    }
+
+    Categoria categoria = categoriaRepository
+            .findByNomeIgnoreCase(categoriaNome.trim())
+            .filter(c -> Boolean.TRUE.equals(c.getAtivo()))
+            .orElseThrow(() -> new IllegalArgumentException(
+                    "Categoria não encontrada ou inativa."));
+
+    String ano = String.valueOf(LocalDateTime.now().getYear());
+    long numero = solicitacaoRepository.count() + 1;
+
+    String protocolo = String.format(
+            "PSRH-%s-%06d",
+            ano,
+            numero
+    );
+
+    LocalDateTime agora = LocalDateTime.now();
+
+    Solicitacao solicitacao = new Solicitacao();
+
+    solicitacao.setProtocolo(protocolo);
+    solicitacao.setUsuario(usuario);
+    solicitacao.setCategoria(categoria);
+    solicitacao.setDescricao(descricao.trim());
+    solicitacao.setStatus("Aberta");
+    solicitacao.setDataAbertura(agora);
+    solicitacao.setAtivo(true);
+
+    // Salva a solicitação primeiro para obter seu identificador.
+    Solicitacao solicitacaoSalva =
+            solicitacaoRepository.save(solicitacao);
+
+    // Registra a abertura no histórico.
+    HistoricoSolicitacao historico = new HistoricoSolicitacao();
+
+    historico.setSolicitacao(solicitacaoSalva);
+    historico.setUsuario(usuario);
+    historico.setDataHora(agora);
+    historico.setAcao("Solicitação criada");
+    historico.setStatusAnterior(null);
+    historico.setNovoStatus("Aberta");
+    historico.setObservacao(
+            "Solicitação aberta pelo colaborador.");
+
+    historicoSolicitacaoRepository.save(historico);
+
+    return solicitacaoSalva;
+}
+
     public List<Solicitacao> listarSolicitacoes() {
         return solicitacaoRepository.findAll()
                 .stream()
@@ -98,10 +120,7 @@ public class SolicitacaoService {
                 .toList();
     }
 
-    // Lista somente solicitações ativas do usuário.
-    public List<Solicitacao> listarSolicitacoesDoUsuario(
-            Long usuarioId) {
-
+    public List<Solicitacao> listarSolicitacoesDoUsuario(Long usuarioId) {
         validarUsuarioId(usuarioId);
 
         return solicitacaoRepository.findByUsuarioId(usuarioId)
@@ -110,7 +129,6 @@ public class SolicitacaoService {
                 .toList();
     }
 
-    // Lista solicitações ativas do usuário filtradas por status.
     public List<Solicitacao> listarSolicitacoesDoUsuarioPorStatus(
             Long usuarioId,
             String status) {
@@ -119,13 +137,13 @@ public class SolicitacaoService {
 
         return listarSolicitacoesDoUsuario(usuarioId)
                 .stream()
-                .filter(s -> status == null
+                .filter(s ->
+                        status == null
                         || status.isBlank()
                         || s.getStatus().equalsIgnoreCase(status.trim()))
                 .toList();
     }
 
-    // Busca uma solicitação ativa pelo ID.
     public Solicitacao buscarPorId(Long id) {
         return solicitacaoRepository.findById(id)
                 .filter(s -> Boolean.TRUE.equals(s.getAtivo()))
@@ -133,18 +151,15 @@ public class SolicitacaoService {
                         "Solicitação não encontrada ou inativa."));
     }
 
-    // Busca uma solicitação ativa pelo protocolo.
     public Solicitacao buscarPorProtocolo(String protocolo) {
         validarProtocolo(protocolo);
 
-        return solicitacaoRepository
-                .findByProtocolo(protocolo.trim())
+        return solicitacaoRepository.findByProtocolo(protocolo.trim())
                 .filter(s -> Boolean.TRUE.equals(s.getAtivo()))
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Nenhuma solicitação ativa encontrada para esse protocolo."));
     }
 
-    // Busca protocolo ativo pertencente ao usuário.
     public Solicitacao buscarPorProtocoloDoUsuario(
             String protocolo,
             Long usuarioId) {
@@ -153,41 +168,141 @@ public class SolicitacaoService {
         validarUsuarioId(usuarioId);
 
         return solicitacaoRepository
-                .findByProtocoloAndUsuarioId(
-                        protocolo.trim(),
-                        usuarioId)
+                .findByProtocoloAndUsuarioId(protocolo.trim(), usuarioId)
                 .filter(s -> Boolean.TRUE.equals(s.getAtivo()))
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Nenhuma solicitação ativa encontrada para esse protocolo."));
     }
 
-    // Filtra solicitações ativas por status.
     public List<Solicitacao> listarPorStatus(String status) {
         return listarSolicitacoes()
                 .stream()
-                .filter(s -> status == null
+                .filter(s ->
+                        status == null
                         || status.isBlank()
                         || s.getStatus().equalsIgnoreCase(status.trim()))
                 .toList();
     }
 
-    // Realiza exclusão lógica sem apagar o registro do banco.
+    /**
+     * Pesquisa solicitações usando os filtros informados.
+     *
+     * Valores enviados ao repositório:
+     * - Protocolo vazio: ""
+     * - Status vazio: ""
+     * - Categoria não selecionada: -1
+     * - Usuário sem restrição: -1
+     */
+    @Transactional(readOnly = true)
+public List<Solicitacao> pesquisarAvancado(
+        String protocolo,
+        String status,
+        Long categoriaId,
+        LocalDate dataInicial,
+        LocalDate dataFinal,
+        Long usuarioId) {
+
+    if (usuarioId != null) {
+        validarUsuarioId(usuarioId);
+    }
+
+    if (dataInicial != null
+            && dataFinal != null
+            && dataInicial.isAfter(dataFinal)) {
+
+        throw new IllegalArgumentException(
+                "A data inicial não pode ser posterior à data final.");
+    }
+
+    String protocoloFiltro =
+            protocolo == null ? "" : protocolo.trim();
+
+    String statusFiltro =
+            status == null ? "" : status.trim();
+
+    LocalDateTime inicio =
+            dataInicial == null
+                    ? null
+                    : dataInicial.atStartOfDay();
+
+    LocalDateTime fimExclusivo =
+            dataFinal == null
+                    ? null
+                    : dataFinal.plusDays(1).atStartOfDay();
+
+    return solicitacaoRepository.findAll()
+            .stream()
+
+            // Mostrar apenas solicitações ativas
+            .filter(s -> Boolean.TRUE.equals(s.getAtivo()))
+
+            // Pesquisar pelo protocolo
+            .filter(s ->
+                    protocoloFiltro.isEmpty()
+                    || (s.getProtocolo() != null
+                    && s.getProtocolo()
+                            .toLowerCase(java.util.Locale.ROOT)
+                            .contains(protocoloFiltro
+                                    .toLowerCase(java.util.Locale.ROOT))))
+
+            // Filtrar pelo status
+            .filter(s ->
+                    statusFiltro.isEmpty()
+                    || (s.getStatus() != null
+                    && s.getStatus()
+                            .equalsIgnoreCase(statusFiltro)))
+
+            // Filtrar pela categoria
+            .filter(s ->
+                    categoriaId == null
+                    || (s.getCategoria() != null
+                    && categoriaId.equals(s.getCategoria().getId())))
+
+            // Aplicar data inicial
+            .filter(s ->
+                    inicio == null
+                    || (s.getDataAbertura() != null
+                    && !s.getDataAbertura().isBefore(inicio)))
+
+            // Aplicar data final, incluindo todo o dia selecionado
+            .filter(s ->
+                    fimExclusivo == null
+                    || (s.getDataAbertura() != null
+                    && s.getDataAbertura().isBefore(fimExclusivo)))
+
+            // Restringir as solicitações ao usuário, quando necessário
+            .filter(s ->
+                    usuarioId == null
+                    || (s.getUsuario() != null
+                    && usuarioId.equals(s.getUsuario().getId())))
+
+            // Mais recentes primeiro
+            .sorted((a, b) ->
+                    b.getDataAbertura().compareTo(a.getDataAbertura()))
+
+            .toList();
+}
     @Transactional
-    public void excluirLogicamente(Long id, Usuario usuarioResponsavel) {
+    public void excluirLogicamente(
+            Long id,
+            Usuario usuarioResponsavel) {
 
         if (usuarioResponsavel == null
                 || usuarioResponsavel.getId() == null) {
+
             throw new IllegalArgumentException(
                     "Usuário responsável não identificado.");
         }
 
         Solicitacao solicitacao = buscarPorId(id);
+
         solicitacao.setAtivo(false);
 
         Solicitacao solicitacaoSalva =
                 solicitacaoRepository.save(solicitacao);
 
         HistoricoSolicitacao historico = new HistoricoSolicitacao();
+
         historico.setSolicitacao(solicitacaoSalva);
         historico.setUsuario(usuarioResponsavel);
         historico.setDataHora(LocalDateTime.now());
@@ -195,13 +310,12 @@ public class SolicitacaoService {
         historico.setStatusAnterior(solicitacaoSalva.getStatus());
         historico.setNovoStatus(solicitacaoSalva.getStatus());
         historico.setObservacao(
-                "Solicitação desativada logicamente. O registro foi mantido no banco de dados."
-        );
+                "Solicitação desativada logicamente. "
+                + "O registro foi mantido no banco de dados.");
 
         historicoSolicitacaoRepository.save(historico);
     }
 
-    // Atualiza o status e registra o histórico.
     @Transactional
     public Solicitacao atualizarStatus(
             Long id,
@@ -215,6 +329,7 @@ public class SolicitacaoService {
 
         if (usuarioResponsavel == null
                 || usuarioResponsavel.getId() == null) {
+
             throw new IllegalArgumentException(
                     "Usuário responsável não identificado.");
         }
@@ -234,6 +349,7 @@ public class SolicitacaoService {
                         "Status inválido."));
 
         Solicitacao solicitacao = buscarPorId(id);
+
         String statusAnterior = solicitacao.getStatus();
 
         if (statusNormalizado.equalsIgnoreCase(statusAnterior)) {
@@ -246,6 +362,7 @@ public class SolicitacaoService {
                 solicitacaoRepository.save(solicitacao);
 
         HistoricoSolicitacao historico = new HistoricoSolicitacao();
+
         historico.setSolicitacao(solicitacaoSalva);
         historico.setUsuario(usuarioResponsavel);
         historico.setDataHora(LocalDateTime.now());
@@ -254,11 +371,10 @@ public class SolicitacaoService {
         historico.setNovoStatus(statusNormalizado);
         historico.setObservacao(
                 "Status alterado de "
-                        + statusAnterior
-                        + " para "
-                        + statusNormalizado
-                        + "."
-        );
+                + statusAnterior
+                + " para "
+                + statusNormalizado
+                + ".");
 
         historicoSolicitacaoRepository.save(historico);
 

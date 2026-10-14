@@ -10,7 +10,8 @@ import java.util.Map;
 import java.util.Optional;
 
 @Repository
-public interface SolicitacaoRepository extends JpaRepository<Solicitacao, Long> {
+public interface SolicitacaoRepository
+        extends JpaRepository<Solicitacao, Long> {
 
     Optional<Solicitacao> findByProtocolo(String protocolo);
 
@@ -18,17 +19,20 @@ public interface SolicitacaoRepository extends JpaRepository<Solicitacao, Long> 
 
     Optional<Solicitacao> findByProtocoloAndUsuarioId(
             String protocolo,
-            Long usuarioId);
+            Long usuarioId
+    );
 
     List<Solicitacao> findByStatusIgnoreCase(String status);
 
     List<Solicitacao> findByUsuarioIdAndStatusIgnoreCase(
             Long usuarioId,
-            String status);
+            String status
+    );
 
     @Query("""
         SELECT s.status AS status, COUNT(s) AS quantidade
         FROM Solicitacao s
+        WHERE s.ativo = true
         GROUP BY s.status
         ORDER BY s.status
         """)
@@ -38,6 +42,7 @@ public interface SolicitacaoRepository extends JpaRepository<Solicitacao, Long> 
         SELECT c.nome AS categoria, COUNT(s) AS quantidade
         FROM Solicitacao s
         JOIN s.categoria c
+        WHERE s.ativo = true
         GROUP BY c.nome
         ORDER BY c.nome
         """)
