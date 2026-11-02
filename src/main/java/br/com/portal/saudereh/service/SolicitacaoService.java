@@ -193,8 +193,10 @@ public class SolicitacaoService {
      * - Categoria não selecionada: -1
      * - Usuário sem restrição: -1
      */
-    @Transactional(readOnly = true)
-public List<Solicitacao> pesquisarAvancado(
+
+
+        @Transactional(readOnly = true)
+        public List<Solicitacao> pesquisarAvancado(
         String protocolo,
         String status,
         Long categoriaId,
@@ -211,77 +213,44 @@ public List<Solicitacao> pesquisarAvancado(
             && dataInicial.isAfter(dataFinal)) {
 
         throw new IllegalArgumentException(
-                "A data inicial não pode ser posterior à data final.");
+                "A data inicial não pode ser posterior à data final."
+        );
     }
 
-    String protocoloFiltro =
-            protocolo == null ? "" : protocolo.trim();
+        String protocoloFiltro =
+                protocolo == null || protocolo.isBlank()
+                        ? ""
+                        : protocolo.trim();
 
-    String statusFiltro =
-            status == null ? "" : status.trim();
+        String statusFiltro =
+                status == null || status.isBlank()
+                        ? ""
+                        : status.trim();
 
-    LocalDateTime inicio =
-            dataInicial == null
-                    ? null
-                    : dataInicial.atStartOfDay();
+        Long categoriaFiltro =
+                categoriaId == null ? -1L : categoriaId;
 
-    LocalDateTime fimExclusivo =
-            dataFinal == null
-                    ? null
-                    : dataFinal.plusDays(1).atStartOfDay();
+        Long usuarioFiltro =
+                usuarioId == null ? -1L : usuarioId;
 
-    return solicitacaoRepository.findAll()
-            .stream()
+    LocalDateTime inicio = dataInicial == null
+        ? LocalDateTime.of(1900, 1, 1, 0, 0)
+        : dataInicial.atStartOfDay();
 
-            // Mostrar apenas solicitações ativas
-            .filter(s -> Boolean.TRUE.equals(s.getAtivo()))
+     LocalDateTime fimExclusivo = dataFinal == null
+        ? LocalDateTime.of(9999, 12, 31, 23, 59, 59)
+        : dataFinal.plusDays(1).atStartOfDay();
 
-            // Pesquisar pelo protocolo
-            .filter(s ->
-                    protocoloFiltro.isEmpty()
-                    || (s.getProtocolo() != null
-                    && s.getProtocolo()
-                            .toLowerCase(java.util.Locale.ROOT)
-                            .contains(protocoloFiltro
-                                    .toLowerCase(java.util.Locale.ROOT))))
-
-            // Filtrar pelo status
-            .filter(s ->
-                    statusFiltro.isEmpty()
-                    || (s.getStatus() != null
-                    && s.getStatus()
-                            .equalsIgnoreCase(statusFiltro)))
-
-            // Filtrar pela categoria
-            .filter(s ->
-                    categoriaId == null
-                    || (s.getCategoria() != null
-                    && categoriaId.equals(s.getCategoria().getId())))
-
-            // Aplicar data inicial
-            .filter(s ->
-                    inicio == null
-                    || (s.getDataAbertura() != null
-                    && !s.getDataAbertura().isBefore(inicio)))
-
-            // Aplicar data final, incluindo todo o dia selecionado
-            .filter(s ->
-                    fimExclusivo == null
-                    || (s.getDataAbertura() != null
-                    && s.getDataAbertura().isBefore(fimExclusivo)))
-
-            // Restringir as solicitações ao usuário, quando necessário
-            .filter(s ->
-                    usuarioId == null
-                    || (s.getUsuario() != null
-                    && usuarioId.equals(s.getUsuario().getId())))
-
-            // Mais recentes primeiro
-            .sorted((a, b) ->
-                    b.getDataAbertura().compareTo(a.getDataAbertura()))
-
-            .toList();
+    return solicitacaoRepository.pesquisarAvancado(
+            protocoloFiltro,
+            statusFiltro,
+            categoriaFiltro,
+            inicio,
+            fimExclusivo,
+            usuarioFiltro
+    );
 }
+
     @Transactional
     public void excluirLogicamente(
             Long id,
@@ -352,9 +321,18 @@ public List<Solicitacao> pesquisarAvancado(
 
         String statusAnterior = solicitacao.getStatus();
 
+        // Impede a reabertura de solicitações concluídas.
+        if ("Concluída".equalsIgnoreCase(statusAnterior)) {
+                throw new IllegalArgumentException(
+                "Esta solicitação já foi concluída e não pode ser reaberta. "
+        + "Se precisar de um novo atendimento, abra outra solicitação."
+    );
+}
+
         if (statusNormalizado.equalsIgnoreCase(statusAnterior)) {
-            return solicitacao;
-        }
+        return solicitacao;
+}
+
 
         solicitacao.setStatus(statusNormalizado);
 

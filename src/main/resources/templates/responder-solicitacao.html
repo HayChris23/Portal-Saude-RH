@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responder solicitação | Portal Saúde RH</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+            padding: 30px;
+            color: #243447;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        h1, h2 {
+            color: #174a70;
+        }
+
+        .campo {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 12px;
+            border: 1px solid #ccd3da;
+            border-radius: 6px;
+            box-sizing: border-box;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        button, .botao {
+            display: inline-block;
+            padding: 11px 18px;
+            border: none;
+            border-radius: 6px;
+            background: #176b87;
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .botao-voltar {
+            background: #687782;
+        }
+
+        .mensagem {
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            background: #e0f4e8;
+            color: #176536;
+        }
+
+        .erro {
+            background: #fde8e8;
+            color: #9c2222;
+        }
+
+        .resposta {
+            border-left: 4px solid #176b87;
+            padding: 12px 16px;
+            margin-top: 15px;
+            background: #f7f9fb;
+            border-radius: 4px;
+            overflow-wrap: anywhere;
+        }
+
+        .data {
+            color: #667788;
+            font-size: 13px;
+        }
+
+        .descricao {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
+            .card {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <h1>Responder solicitação</h1>
+
+    <div class="card">
+        <h2>Dados da solicitação</h2>
+
+        <p>
+            <strong>Protocolo:</strong>
+            <span th:text="${solicitacao.protocolo}"></span>
+        </p>
+
+        <p>
+            <strong>Categoria:</strong>
+            <span th:text="${solicitacao.categoria.nome}"></span>
+        </p>
+
+        <p>
+            <strong>Status:</strong>
+            <span th:text="${solicitacao.status}"></span>
+        </p>
+
+        <p>
+            <strong>Descrição:</strong>
+        </p>
+
+        <div class="descricao"
+             th:text="${solicitacao.descricao}"></div>
+    </div>
+
+    <div class="card">
+    <h2>Anexos enviados pelo colaborador</h2>
+
+    <p th:if="${#lists.isEmpty(anexosSolicitacao)}">
+        O colaborador não enviou arquivos nesta solicitação.
+    </p>
+
+    <div th:each="anexo : ${anexosSolicitacao}"
+         class="resposta">
+
+        <p>
+            <strong>Arquivo:</strong>
+            <span th:text="${anexo.nomeOriginal}"></span>
+        </p>
+
+        <p class="data">
+            <strong>Tamanho:</strong>
+            <span th:text="${#numbers.formatDecimal(anexo.tamanhoBytes / 1024.0, 1, 2)}"></span>
+            KB
+        </p>
+
+        <a class="botao"
+           th:href="@{/solicitacoes/{solicitacaoId}/anexos/{anexoId}(solicitacaoId=${solicitacao.id},anexoId=${anexo.id})}">
+            Baixar anexo
+        </a>
+    </div>
+    </div>
+
+    <div class="card">
+        <h2>Registrar resposta</h2>
+
+        <div class="mensagem"
+             th:if="${mensagem}"
+             th:text="${mensagem}"></div>
+
+        <div class="mensagem erro"
+             th:if="${erro}"
+             th:text="${erro}"></div>
+
+        <form th:action="@{/solicitacoes/{id}/responder(id=${solicitacao.id})}"
+              method="post"
+              enctype="multipart/form-data">
+
+            <div class="campo">
+                <label for="comentario">Resposta ao colaborador</label>
+
+                <textarea id="comentario"
+                          name="comentario"
+                          maxlength="10000"
+                          required
+                          placeholder="Digite a orientação ou resposta à solicitação..."></textarea>
+            </div>
+
+
+            <div class="campo">
+                <label for="arquivos">Anexar documentos</label>
+
+                <input type="file"
+                 id="arquivos"
+                 name="arquivos"
+                 multiple
+                 accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
+
+    <small>
+        Formatos permitidos: PDF, JPG e PNG.
+        Tamanho máximo: 5 MB por arquivo.
+    </small>
+</div>
+
+            <button type="submit">Registrar resposta</button>
+
+            <a class="botao botao-voltar"
+               th:href="@{/solicitacoes}">
+                Voltar às solicitações
+            </a>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Histórico de respostas</h2>
+
+        <p th:if="${#lists.isEmpty(respostas)}">
+            Ainda não existem respostas registradas para esta solicitação.
+        </p>
+
+        <div th:each="resposta : ${respostas}" class="resposta">
+            <p>
+                <strong>Responsável:</strong>
+                <span th:text="${resposta.usuarioResposta.nome}"></span>
+            </p>
+
+            <p class="data"
+               th:text="${#temporals.format(resposta.dataResposta, 'dd/MM/yyyy HH:mm')}">
+            </p>
+
+            <div class="descricao"
+                 th:text="${resposta.comentario}"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

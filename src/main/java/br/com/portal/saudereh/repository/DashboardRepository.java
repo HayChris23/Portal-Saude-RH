@@ -47,4 +47,30 @@ public interface DashboardRepository extends JpaRepository<Solicitacao, Long> {
         AND s.status = :status
     """)
     long contarPorStatusEspecifico(@Param("status") String status);
+
+    // Dados das solicitações concluídas para calcular o tempo de atendimento
+    @Query("""
+        SELECT s.id, s.dataAbertura, MIN(h.dataHora)
+        FROM Solicitacao s, HistoricoSolicitacao h
+        WHERE h.solicitacao.id = s.id
+        AND LOWER(h.novoStatus) = 'concluída'
+        AND h.acao = 'Alteração de status'
+        AND s.ativo = true
+        GROUP BY s.id, s.dataAbertura
+        ORDER BY MIN(h.dataHora) DESC
+    """)
+    List<Object[]> buscarDadosConclusao();
+
+    // Diagnóstico: lista as conclusões registradas no histórico.
+    @Query("""
+        SELECT h.solicitacao.id, h.novoStatus,
+               h.dataHora, h.solicitacao.status
+        FROM HistoricoSolicitacao h
+        WHERE LOWER(h.novoStatus) = 'concluída'
+        AND h.acao = 'Alteração de status'
+        AND h.solicitacao.ativo = true
+        ORDER BY h.dataHora DESC
+    """)
+    List<Object[]> buscarConclusoesParaDiagnostico();
+
 }

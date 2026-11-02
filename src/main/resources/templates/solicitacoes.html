@@ -351,7 +351,9 @@
                         <th>Abertura</th>
                         <th>Status atual</th>
                         <th>Histórico</th>
+                        <th th:if="${perfilAdministrativo}">Resposta</th>
                         <th th:if="${perfilAdministrativo}">Atualizar status</th>
+                        <th th:if="${perfilAdministrativo}">Ações</th>
                     </tr>
                 </thead>
 
@@ -432,6 +434,12 @@
                         </td>
 
                         <td th:if="${perfilAdministrativo}">
+                        <a th:href="@{/solicitacoes/{id}/responder(id=${solicitacao.id})}"  
+                        class="button"> Responder
+                        </a>
+                        </td>
+
+                        <td th:if="${perfilAdministrativo}">
 
                             <form th:action="@{/solicitacoes/{id}/status(id=${solicitacao.id})}"
                                   method="post"
@@ -474,10 +482,24 @@
 
                         </td>
 
-                    </tr>
+
+
+
+     <td th:if="${perfilAdministrativo}">
+    <form th:action="@{/solicitacoes/{id}/excluir(id=${solicitacao.id})}"
+          method="post"
+          onsubmit="return confirm('Tem certeza de que deseja desativar esta solicitação?');">
+
+        <button type="submit" class="button secondary">
+            Desativar
+        </button>
+
+    </form>
+</td>        
+                    </tr>  
 
                     <tr th:if="${#lists.isEmpty(solicitacoes)}">
-                        <td colspan="8" class="empty">
+                        <td colspan="9" class="empty">
                             Nenhuma solicitação encontrada para os filtros informados.
                         </td>
                     </tr>

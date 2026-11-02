@@ -191,7 +191,40 @@
         </div>
     </section>
 
+   
+    <!-- Anexos enviados pelo colaborador -->
     <section class="card">
+        <h2>Documentos enviados na solicitação</h2>
+
+        <div th:if="${#lists.isEmpty(anexosSolicitacao)}"
+             class="vazio">
+            Nenhum documento foi anexado na abertura desta solicitação.
+        </div>
+
+        <div th:each="anexo : ${anexosSolicitacao}"
+             style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+
+            <p>
+                <strong>Arquivo:</strong>
+                <span th:text="${anexo.nomeOriginal}">documento.pdf</span>
+            </p>
+
+            <p>
+                <strong>Tamanho:</strong>
+                <span th:text="${#numbers.formatDecimal(anexo.tamanhoBytes / 1024.0, 1, 2)}">
+                    100
+                </span> KB
+            </p>
+
+            <a class="botao botao-voltar"
+               th:href="@{/solicitacoes/{solicitacaoId}/anexos/{anexoId}(
+                    solicitacaoId=${solicitacao.id},
+                    anexoId=${anexo.id})}">
+                Baixar documento
+            </a>
+        </div>
+    </section>
+
         <h2>Movimentações registradas</h2>
 
         <div class="tabela-container">
@@ -243,6 +276,65 @@
             </table>
         </div>
     </section>
+
+<!-- Respostas da equipe de RH -->
+<section class="card">
+    <h2>Respostas da equipe de RH</h2>
+
+    <div th:if="${#lists.isEmpty(respostas)}" class="vazio">
+        Ainda não existem respostas registradas para esta solicitação.
+    </div>
+
+    <div th:each="resposta : ${respostas}"
+         class="resposta"
+         style="border-bottom: 1px solid #ddd; padding: 16px 0;">
+
+        <p>
+            <strong>Responsável:</strong>
+            <span th:text="${resposta.usuarioResposta != null ? resposta.usuarioResposta.nome : 'Não informado'}">
+                Responsável
+            </span>
+        </p>
+
+        <p>
+            <strong>Data da resposta:</strong>
+            <span th:text="${resposta.dataResposta != null ? #temporals.format(resposta.dataResposta, 'dd/MM/yyyy HH:mm') : 'Não informada'}">
+                01/01/2026 10:00
+            </span>
+        </p>
+
+        <div>
+            <strong>Resposta:</strong>
+            <p th:text="${resposta.comentario}">Comentário da equipe de RH</p>
+        </div>
+
+        <!-- Arquivos anexados à resposta -->
+        <div th:if="${anexosPorResposta[resposta.id] != null
+                     and !#lists.isEmpty(anexosPorResposta[resposta.id])}">
+
+            <strong>Documentos anexados:</strong>
+
+            <ul>
+                <li th:each="anexo : ${anexosPorResposta[resposta.id]}">
+
+                    <span th:text="${anexo.nomeOriginal}">
+                        documento.pdf
+                    </span>
+
+                    <a th:href="@{/solicitacoes/{solicitacaoId}/respostas/{respostaId}/anexos/{anexoId}(
+                                solicitacaoId=${solicitacao.id},
+                                respostaId=${resposta.id},
+                                anexoId=${anexo.id})}"
+                       style="margin-left: 10px;">
+                        Baixar anexo
+                    </a>
+
+                </li>
+            </ul>
+        </div>
+
+    </div>
+</section>
 
 </div>
 </body>

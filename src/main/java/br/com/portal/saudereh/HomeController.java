@@ -4,11 +4,15 @@ package br.com.portal.saudereh;
 import br.com.portal.saudereh.model.Categoria;
 import br.com.portal.saudereh.model.Solicitacao;
 import br.com.portal.saudereh.model.Usuario;
+import br.com.portal.saudereh.model.RespostaSolicitacao;
 import br.com.portal.saudereh.service.AutenticacaoService;
 import br.com.portal.saudereh.service.CategoriaService;
 import br.com.portal.saudereh.service.SolicitacaoService;
 import br.com.portal.saudereh.service.DashboardService;
 import br.com.portal.saudereh.service.HistoricoSolicitacaoService;
+import br.com.portal.saudereh.service.RespostaSolicitacaoService;
+import br.com.portal.saudereh.service.AnexoRespostaService;
+import br.com.portal.saudereh.service.AnexoSolicitacaoService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -22,8 +26,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.format.annotation.DateTimeFormat;
-import java.time.LocalDate;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 
+import java.time.LocalDate;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.List;
 
 @Controller
@@ -38,20 +52,29 @@ public class HomeController {
     private final CategoriaService categoriaService;
     private final DashboardService dashboardService;
     private final HistoricoSolicitacaoService historicoSolicitacaoService;
+    private final RespostaSolicitacaoService respostaSolicitacaoService;
+    private final AnexoRespostaService anexoRespostaService;
+    private final AnexoSolicitacaoService anexoSolicitacaoService;
 
     public HomeController(
             SolicitacaoService solicitacaoService,
             AutenticacaoService autenticacaoService,
             CategoriaService categoriaService,
             DashboardService dashboardService,
-            HistoricoSolicitacaoService historicoSolicitacaoService) {
+            HistoricoSolicitacaoService historicoSolicitacaoService,
+            RespostaSolicitacaoService respostaSolicitacaoService,
+            AnexoRespostaService anexoRespostaService,
+            AnexoSolicitacaoService anexoSolicitacaoService) {
 
         this.solicitacaoService = solicitacaoService;
         this.autenticacaoService = autenticacaoService;
         this.categoriaService = categoriaService;
         this.dashboardService = dashboardService;
         this.historicoSolicitacaoService = historicoSolicitacaoService;
-    }
+        this.respostaSolicitacaoService = respostaSolicitacaoService;
+        this.anexoRespostaService = anexoRespostaService;
+        this.anexoSolicitacaoService = anexoSolicitacaoService;
+        }
 
     @GetMapping("/")
     public String home() {
@@ -132,10 +155,10 @@ public class HomeController {
                     );
 
             if (arquivo != null && !arquivo.isEmpty()) {
-                System.out.println(
-                        "Arquivo recebido: "
-                                + arquivo.getOriginalFilename()
-                );
+                anexoSolicitacaoService.armazenarArquivos(
+                    solicitacao,
+                    new MultipartFile[]{arquivo}
+            );
             }
 
             model.addAttribute("usuario", usuario);
@@ -143,11 +166,21 @@ public class HomeController {
 
             return "sucesso";
 
-        } catch (IllegalArgumentException e) {
+            
+
+            } catch (IllegalArgumentException e) {
             model.addAttribute("erro", e.getMessage());
             model.addAttribute("usuario", usuario);
             return "nova-solicitacao";
-        }
+
+            } catch (RuntimeException e) {
+                model.addAttribute (
+                    "erro",
+                    "Não foi possível salvar o anexo. Verifique o arquivo e tente novamente."
+                );
+                model.addAttribute ("usuario", usuario);
+                return "nova-solicitacao";
+            }
     }
 
     // Consulta e administração de categorias: perfis administrativos.
@@ -383,6 +416,159 @@ System.out.println("TESTE 3: Preparando a página solicitacoes.");
     }
 
 
+// Somente perfis administrativos podem desativar solicitações.
+@PostMapping("/solicitacoes/{id}/excluir")
+public String excluirSolicitacao(
+        @PathVariable Long id,
+        HttpSession session,
+        RedirectAttributes redirectAttributes) {
+
+    Usuario usuario = usuarioLogado(session);
+
+    if (usuario == null) {
+        return "redirect:/login";
+    }
+
+    if (!podeAdministrar(usuario)) {
+        redirectAttributes.addFlashAttribute(
+                "erro",
+                "Você não tem permissão para desativar solicitações."
+        );
+        return "redirect:/solicitacoes";
+    }
+
+    try {
+        solicitacaoService.excluirLogicamente(id, usuario);
+
+        redirectAttributes.addFlashAttribute(
+                "mensagem",
+                "Solicitação desativada com sucesso!"
+        );
+
+    } catch (IllegalArgumentException e) {
+        redirectAttributes.addFlashAttribute(
+                "erro",
+                e.getMessage()
+        );
+    }
+
+    return "redirect:/solicitacoes";
+}
+
+    // Exibe a tela para responder a uma solicitação.
+@GetMapping("/solicitacoes/{id}/responder")
+public String exibirFormularioResposta(
+        @PathVariable Long id,
+        HttpSession session,
+        Model model,
+        RedirectAttributes redirectAttributes) {
+
+    Usuario usuario = usuarioLogado(session);
+
+    if (usuario == null) {
+        return "redirect:/login";
+    }
+
+    if (!podeAdministrar(usuario)) {
+        redirectAttributes.addFlashAttribute(
+                "erro",
+                "Você não tem permissão para responder às solicitações."
+        );
+        return "redirect:/solicitacoes";
+    }
+
+    try {
+        Solicitacao solicitacao = solicitacaoService.buscarPorId(id);
+
+        model.addAttribute("usuario", usuario);
+        model.addAttribute("solicitacao", solicitacao);
+        model.addAttribute(
+                 "anexosSolicitacao",
+                anexoSolicitacaoService.listarPorSolicitacao(id)
+        );
+
+        List<RespostaSolicitacao> respostas =
+        respostaSolicitacaoService.listarRespostas(id);
+
+        model.addAttribute("respostas", respostas);
+
+        java.util.Map<Long, List<br.com.portal.saudereh.model.AnexoResposta>> anexosPorResposta =
+        new java.util.HashMap<>();
+
+        for (RespostaSolicitacao resposta : respostas) {
+            anexosPorResposta.put(
+            resposta.getId(),
+            anexoRespostaService.listarPorResposta(resposta.getId())
+    );
+}
+
+        model.addAttribute("anexosPorResposta", anexosPorResposta);
+
+        return "responder-solicitacao";
+
+    } catch (IllegalArgumentException e) {
+        redirectAttributes.addFlashAttribute("erro", e.getMessage());
+        return "redirect:/solicitacoes";
+    }
+}
+
+    // Registra uma resposta sem alterar o status da solicitação.
+    @PostMapping("/solicitacoes/{id}/responder")
+        public String registrarResposta(
+            @PathVariable Long id,
+            @RequestParam String comentario,
+            @RequestParam(name = "arquivos", required = false)
+            MultipartFile[] arquivos,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+    Usuario usuario = usuarioLogado(session);
+
+    if (usuario == null) {
+        return "redirect:/login";
+    }
+
+    if (!podeAdministrar(usuario)) {
+        redirectAttributes.addFlashAttribute(
+                "erro",
+                "Você não tem permissão para responder às solicitações."
+        );
+        return "redirect:/solicitacoes";
+    }
+
+    try {
+        RespostaSolicitacao resposta =
+                respostaSolicitacaoService.registrarResposta(
+                        id,
+                        usuario,
+                        comentario
+                );
+
+        anexoRespostaService.armazenarArquivos(
+                resposta,
+                arquivos
+        );
+
+        redirectAttributes.addFlashAttribute(
+                "mensagem",
+                "Resposta registrada com sucesso!"
+        );
+
+        return "redirect:/solicitacoes/" + id + "/responder";
+
+    } catch (IllegalArgumentException e) {
+        redirectAttributes.addFlashAttribute("erro", e.getMessage());
+        return "redirect:/solicitacoes/" + id + "/responder";
+
+    } catch (RuntimeException e) {
+        redirectAttributes.addFlashAttribute(
+                "erro",
+                "Não foi possível registrar a resposta e seus anexos. Tente novamente."
+        );
+        return "redirect:/solicitacoes/" + id + "/responder";
+    }
+}
+
     @GetMapping("/solicitacoes/{id}/historico")
     public String consultarHistorico(
         @PathVariable Long id,
@@ -397,7 +583,10 @@ System.out.println("TESTE 3: Preparando a página solicitacoes.");
     }
 
     try {
+        System.out.println("HISTORICO: iniciando consulta. ID=" + id);
+
         Solicitacao solicitacao = solicitacaoService.buscarPorId(id);
+        System.out.println("HISTORICO: solicitacao localizada.");
 
         boolean administrativo = podeAdministrar(usuario);
 
@@ -414,21 +603,63 @@ System.out.println("TESTE 3: Preparando a página solicitacoes.");
             return "redirect:/solicitacoes";
         }
 
-        model.addAttribute("usuario", usuario);
         model.addAttribute("solicitacao", solicitacao);
+        model.addAttribute(
+            "anexosSolicitacao",
+            anexoSolicitacaoService.listarPorSolicitacao(id)
+);
+
+        System.out.println("HISTORICO: buscando registros de historico.");
+
         model.addAttribute(
                 "historicos",
                 historicoSolicitacaoService.listarPorSolicitacao(id)
         );
 
+        System.out.println("HISTORICO: buscando respostas.");
+
+        List<RespostaSolicitacao> respostas =
+                respostaSolicitacaoService.listarRespostas(id);
+
+        model.addAttribute("respostas", respostas);
+
+        System.out.println(
+                "HISTORICO: respostas encontradas = " + respostas.size()
+        );
+
+        java.util.Map<Long,
+                List<br.com.portal.saudereh.model.AnexoResposta>>
+                anexosPorResposta = new java.util.HashMap<>();
+
+        for (RespostaSolicitacao resposta : respostas) {
+            anexosPorResposta.put(
+                    resposta.getId(),
+                    anexoRespostaService.listarPorResposta(resposta.getId())
+            );
+        }
+
+        model.addAttribute("anexosPorResposta", anexosPorResposta);
+
+        System.out.println("HISTORICO: dados carregados com sucesso.");
+
         return "historico-solicitacao";
 
-    } catch (IllegalArgumentException e) {
-        redirectAttributes.addFlashAttribute("erro", e.getMessage());
+    } catch (Exception e) {
+        System.err.println(
+                "ERRO AO CONSULTAR HISTORICO. ID=" + id
+        );
+
+        e.printStackTrace();
+
+        redirectAttributes.addFlashAttribute(
+                "erro",
+                "Não foi possível consultar o histórico. Tente novamente."
+        );
+
         return "redirect:/solicitacoes";
     }
 }
-        
+ 
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
     Usuario usuario = (Usuario) session.getAttribute("usuario");
@@ -468,7 +699,20 @@ System.out.println("TESTE 3: Preparando a página solicitacoes.");
     dashboardService.getSolicitacoesPendentes()
     );
 
+// Tempo médio de atendimento, em horas
+    model.addAttribute(
+    "tempoMedioAtendimento",
+    dashboardService.getTempoMedioAtendimentoHoras()
+);
+
+// Quantidade de conclusões por mês
+    model.addAttribute(
+    "conclusoesPorMes",
+    dashboardService.getConclusoesPorMes()
+);
+
 System.out.println("========== DASHBOARD ==========");
+dashboardService.diagnosticarConclusoes();
 
 for (Object[] item : dashboardService.getSolicitacoesPorStatus()) {
     System.out.println(
@@ -507,5 +751,139 @@ return "dashboard";
         return ADM_PLANO_SAUDE.equals(perfil)
                 || RH_GESTOR.equals(perfil);
     }
+
+    @GetMapping("/solicitacoes/{solicitacaoId}/respostas/{respostaId}/anexos/{anexoId}")
+    public ResponseEntity<Resource> baixarAnexoResposta(
+        @PathVariable Long solicitacaoId,
+        @PathVariable Long respostaId,
+        @PathVariable Long anexoId,
+        HttpSession session) {
+
+    Usuario usuario = usuarioLogado(session);
+
+    if (usuario == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    try {
+        // Confirma que a solicitação existe.
+        Solicitacao solicitacao =
+                solicitacaoService.buscarPorId(solicitacaoId);
+
+        // Permite acesso somente ao administrador ou ao dono da solicitação.
+        boolean administrativo = podeAdministrar(usuario);
+
+        boolean donoDaSolicitacao =
+                solicitacao.getUsuario() != null
+                && solicitacao.getUsuario().getId() != null
+                && solicitacao.getUsuario().getId().equals(usuario.getId());
+
+        if (!administrativo && !donoDaSolicitacao) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        // Confirma que a resposta pertence à solicitação informada.
+        respostaSolicitacaoService.buscarResposta(
+                respostaId,
+                solicitacaoId
+        );
+
+        // Confirma que o anexo pertence à resposta informada.
+        br.com.portal.saudereh.model.AnexoResposta anexo =
+                anexoRespostaService.buscarAnexoPorResposta(
+                        anexoId,
+                        respostaId
+                );
+
+        Path caminho = anexoRespostaService.localizarArquivo(anexo);
+
+        Resource arquivo = new FileSystemResource(caminho);
+
+        ContentDisposition disposicao =
+                ContentDisposition.attachment()
+                        .filename(
+                                anexo.getNomeOriginal(),
+                                StandardCharsets.UTF_8
+                        )
+                        .build();
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        disposicao.toString()
+                )
+                .header("X-Content-Type-Options", "nosniff")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(arquivo);
+
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+    } catch (IOException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+}
+
+@GetMapping("/solicitacoes/{solicitacaoId}/anexos/{anexoId}")
+public ResponseEntity<Resource> baixarAnexoSolicitacao(
+        @PathVariable Long solicitacaoId,
+        @PathVariable Long anexoId,
+        HttpSession session) {
+
+    Usuario usuario = usuarioLogado(session);
+
+    if (usuario == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    try {
+        Solicitacao solicitacao =
+                solicitacaoService.buscarPorId(solicitacaoId);
+
+        boolean administrativo = podeAdministrar(usuario);
+
+        boolean donoDaSolicitacao =
+                solicitacao.getUsuario() != null
+                && solicitacao.getUsuario().getId() != null
+                && solicitacao.getUsuario().getId().equals(usuario.getId());
+
+        if (!administrativo && !donoDaSolicitacao) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        br.com.portal.saudereh.model.AnexoSolicitacao anexo =
+                anexoSolicitacaoService.buscarAnexo(
+                        anexoId,
+                        solicitacaoId
+                );
+
+        Path caminho = anexoSolicitacaoService.localizarArquivo(anexo);
+
+        Resource arquivo = new FileSystemResource(caminho);
+
+        ContentDisposition disposicao =
+                ContentDisposition.attachment()
+                        .filename(
+                                anexo.getNomeOriginal(),
+                                StandardCharsets.UTF_8
+                        )
+                        .build();
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        disposicao.toString()
+                )
+                .header("X-Content-Type-Options", "nosniff")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(arquivo);
+
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+    } catch (IOException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+}
 
 }

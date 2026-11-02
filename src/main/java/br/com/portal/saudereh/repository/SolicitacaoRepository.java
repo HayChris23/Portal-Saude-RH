@@ -3,8 +3,10 @@ package br.com.portal.saudereh.repository;
 import br.com.portal.saudereh.model.Solicitacao;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,6 +29,40 @@ public interface SolicitacaoRepository
     List<Solicitacao> findByUsuarioIdAndStatusIgnoreCase(
             Long usuarioId,
             String status
+    );
+
+    @Query("""
+        SELECT s
+        FROM Solicitacao s
+        WHERE s.ativo = true
+          AND (
+              :protocolo = ''
+              OR LOWER(s.protocolo)
+                 LIKE CONCAT('%', LOWER(:protocolo), '%')
+          )
+          AND (
+              :status = ''
+              OR LOWER(s.status) = LOWER(:status)
+          )
+          AND (
+              :categoriaId = -1
+              OR s.categoria.id = :categoriaId
+          )
+          AND s.dataAbertura >= :dataInicial
+          AND s.dataAbertura < :dataFinal
+          AND (
+              :usuarioId = -1
+              OR s.usuario.id = :usuarioId
+          )
+        ORDER BY s.dataAbertura DESC
+        """)
+    List<Solicitacao> pesquisarAvancado(
+            @Param("protocolo") String protocolo,
+            @Param("status") String status,
+            @Param("categoriaId") Long categoriaId,
+            @Param("dataInicial") LocalDateTime dataInicial,
+            @Param("dataFinal") LocalDateTime dataFinal,
+            @Param("usuarioId") Long usuarioId
     );
 
     @Query("""
