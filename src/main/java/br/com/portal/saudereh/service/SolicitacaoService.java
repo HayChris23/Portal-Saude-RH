@@ -11,6 +11,7 @@ import br.com.portal.saudereh.repository.UsuarioRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -23,95 +24,119 @@ public class SolicitacaoService {
     private final HistoricoSolicitacaoRepository historicoSolicitacaoRepository;
     private final UsuarioRepository usuarioRepository;
     private final CategoriaRepository categoriaRepository;
+    private final AnexoSolicitacaoService anexoSolicitacaoService;
 
     public SolicitacaoService(
             SolicitacaoRepository solicitacaoRepository,
             HistoricoSolicitacaoRepository historicoSolicitacaoRepository,
             UsuarioRepository usuarioRepository,
-            CategoriaRepository categoriaRepository) {
+            CategoriaRepository categoriaRepository,
+            AnexoSolicitacaoService anexoSolicitacaoService){
 
         this.solicitacaoRepository = solicitacaoRepository;
         this.historicoSolicitacaoRepository = historicoSolicitacaoRepository;
         this.usuarioRepository = usuarioRepository;
         this.categoriaRepository = categoriaRepository;
+        this.anexoSolicitacaoService = anexoSolicitacaoService;
     }
 
-   
-        @Transactional 
-        public Solicitacao criarSolicitacao(
-        Usuario usuarioAutenticado,
-        String categoriaNome,
-        String descricao) {
 
-    if (usuarioAutenticado == null
-            || usuarioAutenticado.getId() == null) {
-        throw new IllegalArgumentException(
-                "Usuário autenticado não identificado.");
+    @Transactional
+    public Solicitacao criarSolicitacao(
+            Usuario usuarioAutenticado,
+            String categoriaNome,
+            String descricao) {
+
+        if (usuarioAutenticado == null
+                || usuarioAutenticado.getId() == null) {
+            throw new IllegalArgumentException(
+                    "Usuário autenticado não identificado.");
+        }
+
+        Usuario usuario = usuarioRepository
+                .findById(usuarioAutenticado.getId())
+                .filter(u -> Boolean.TRUE.equals(u.getAtivo()))
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Usuário não encontrado ou inativo."));
+
+        if (descricao == null || descricao.isBlank()) {
+            throw new IllegalArgumentException(
+                    "A descrição da solicitação é obrigatória.");
+        }
+
+        if (categoriaNome == null || categoriaNome.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Selecione uma categoria válida.");
+        }
+
+        Categoria categoria = categoriaRepository
+                .findByNomeIgnoreCase(categoriaNome.trim())
+                .filter(c -> Boolean.TRUE.equals(c.getAtivo()))
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Categoria não encontrada ou inativa."));
+
+        String ano = String.valueOf(LocalDateTime.now().getYear());
+        long numero = solicitacaoRepository.count() + 1;
+
+        String protocolo = String.format(
+                "PSRH-%s-%06d",
+                ano,
+                numero
+        );
+
+        LocalDateTime agora = LocalDateTime.now();
+
+        Solicitacao solicitacao = new Solicitacao();
+
+        solicitacao.setProtocolo(protocolo);
+        solicitacao.setUsuario(usuario);
+        solicitacao.setCategoria(categoria);
+        solicitacao.setDescricao(descricao.trim());
+        solicitacao.setStatus("Aberta");
+        solicitacao.setDataAbertura(agora);
+        solicitacao.setAtivo(true);
+
+        Solicitacao solicitacaoSalva =
+                solicitacaoRepository.save(solicitacao);
+
+        HistoricoSolicitacao historico = new HistoricoSolicitacao();
+
+        historico.setSolicitacao(solicitacaoSalva);
+        historico.setUsuario(usuario);
+        historico.setDataHora(agora);
+        historico.setAcao("Solicitação criada");
+        historico.setStatusAnterior(null);
+        historico.setNovoStatus("Aberta");
+        historico.setObservacao(
+                "Solicitação aberta pelo colaborador.");
+
+        historicoSolicitacaoRepository.save(historico);
+
+        return solicitacaoSalva;
     }
 
-    Usuario usuario = usuarioRepository
-            .findById(usuarioAutenticado.getId())
-            .filter(u -> Boolean.TRUE.equals(u.getAtivo()))
-            .orElseThrow(() -> new IllegalArgumentException(
-                    "Usuário não encontrado ou inativo."));
+    @Transactional
+    public Solicitacao criarSolicitacaoComAnexos(
+            Usuario usuarioAutenticado,
+            String categoriaNome,
+            String descricao,
+            MultipartFile[] arquivos) {
 
-    if (descricao == null || descricao.isBlank()) {
-        throw new IllegalArgumentException(
-                "A descrição da solicitação é obrigatória.");
+        Solicitacao solicitacao = criarSolicitacao(
+                usuarioAutenticado,
+                categoriaNome,
+                descricao
+        );
+
+        if (arquivos != null && arquivos.length > 0) {
+            anexoSolicitacaoService.armazenarArquivos(
+                    solicitacao,
+                    arquivos
+            );
+        }
+
+        return solicitacao;
     }
-
-    if (categoriaNome == null || categoriaNome.isBlank()) {
-        throw new IllegalArgumentException(
-                "Selecione uma categoria válida.");
-    }
-
-    Categoria categoria = categoriaRepository
-            .findByNomeIgnoreCase(categoriaNome.trim())
-            .filter(c -> Boolean.TRUE.equals(c.getAtivo()))
-            .orElseThrow(() -> new IllegalArgumentException(
-                    "Categoria não encontrada ou inativa."));
-
-    String ano = String.valueOf(LocalDateTime.now().getYear());
-    long numero = solicitacaoRepository.count() + 1;
-
-    String protocolo = String.format(
-            "PSRH-%s-%06d",
-            ano,
-            numero
-    );
-
-    LocalDateTime agora = LocalDateTime.now();
-
-    Solicitacao solicitacao = new Solicitacao();
-
-    solicitacao.setProtocolo(protocolo);
-    solicitacao.setUsuario(usuario);
-    solicitacao.setCategoria(categoria);
-    solicitacao.setDescricao(descricao.trim());
-    solicitacao.setStatus("Aberta");
-    solicitacao.setDataAbertura(agora);
-    solicitacao.setAtivo(true);
-
-    // Salva a solicitação primeiro para obter seu identificador.
-    Solicitacao solicitacaoSalva =
-            solicitacaoRepository.save(solicitacao);
-
-    // Registra a abertura no histórico.
-    HistoricoSolicitacao historico = new HistoricoSolicitacao();
-
-    historico.setSolicitacao(solicitacaoSalva);
-    historico.setUsuario(usuario);
-    historico.setDataHora(agora);
-    historico.setAcao("Solicitação criada");
-    historico.setStatusAnterior(null);
-    historico.setNovoStatus("Aberta");
-    historico.setObservacao(
-            "Solicitação aberta pelo colaborador.");
-
-    historicoSolicitacaoRepository.save(historico);
-
-    return solicitacaoSalva;
-}
 
     public List<Solicitacao> listarSolicitacoes() {
         return solicitacaoRepository.findAll()

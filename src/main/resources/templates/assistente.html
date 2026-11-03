@@ -107,6 +107,15 @@
             margin-bottom: 18px;
         }
 
+        .sucesso {
+            background: #edf8f1;
+            border-left: 4px solid #32945a;
+            padding: 14px;
+            border-radius: 8px;
+            color: #246b3d;
+            margin-bottom: 18px;
+        }
+
         .rotulo {
             display: block;
             font-size: 12px;
@@ -114,6 +123,38 @@
             text-transform: uppercase;
             margin-bottom: 8px;
             color: #53647a;
+        }
+
+        .topo-chat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .topo-chat h3 {
+            margin: 0;
+            color: #123b67;
+        }
+
+        .botao-limpar {
+            background: #edf1f5;
+            color: #53647a;
+            padding: 9px 14px;
+            font-size: 13px;
+        }
+
+        .botao-limpar:hover {
+            background: #dce4ed;
+        }
+
+        .historico-vazio {
+            text-align: center;
+            color: #718096;
+            padding: 30px 10px;
+            line-height: 1.6;
         }
 
         form {
@@ -219,8 +260,10 @@
 </header>
 
 <main>
+
     <section class="introducao">
         <h2>Assistente Virtual de RH</h2>
+
         <p>
             Olá! Sou o assistente virtual do Portal Saúde RH.
             Posso ajudar com dúvidas gerais sobre solicitações de benefícios
@@ -238,18 +281,48 @@
 
         <div th:if="${erro != null}" class="erro"
              role="alert" th:text="${erro}">
-            Ocorreu um erro.
         </div>
 
-        <div th:if="${pergunta != null and !#strings.isEmpty(pergunta)}"
-             class="mensagem pergunta">
-            <span class="rotulo">Sua pergunta</span>
-            <div th:text="${pergunta}"></div>
+        <div th:if="${mensagem != null}" class="sucesso"
+             role="status" th:text="${mensagem}">
         </div>
 
-        <div th:if="${resposta != null}" class="mensagem resposta">
-            <span class="rotulo">Assistente de IA</span>
-            <div th:text="${resposta}"></div>
+        <div class="topo-chat">
+            <h3>💬 Nossa conversa</h3>
+
+            <form th:action="@{/assistente/limpar}" method="post"
+                  style="margin: 0;"
+                  onsubmit="return confirm('Deseja realmente limpar esta conversa?')">
+
+                <button type="submit" class="botao-limpar">
+                    🗑️ Nova conversa
+                </button>
+
+            </form>
+        </div>
+
+        <div th:if="${historico == null or #lists.isEmpty(historico)}"
+             class="historico-vazio">
+
+            <div style="font-size: 35px;">🤖</div>
+
+            <p>
+                Olá! Como posso ajudar você hoje?<br>
+                Digite sua primeira pergunta abaixo para começar.
+            </p>
+
+        </div>
+
+        <div th:each="item : ${historico}"
+             class="mensagem"
+             th:classappend="${item.role == 'user'} ? ' pergunta' : ' resposta'">
+
+            <span class="rotulo"
+                  th:text="${item.role == 'user'} ? 'Você' : 'Assistente de IA'">
+            </span>
+
+            <div th:text="${item.content}"></div>
+
         </div>
 
         <form th:action="@{/assistente/perguntar}"
@@ -264,9 +337,11 @@
                 maxlength="2000"
                 placeholder="Digite sua dúvida sobre o portal ou as solicitações de benefícios..."
                 required
-                th:text="${pergunta}"></textarea>
+                th:text="${pergunta}">
+            </textarea>
 
             <div class="acoes">
+
                 <span class="contador">
                     <span id="quantidade">0</span>/2000 caracteres
                 </span>
@@ -274,7 +349,9 @@
                 <button id="botaoEnviar" type="submit">
                     Enviar pergunta
                 </button>
+
             </div>
+
         </form>
 
     </section>
@@ -282,6 +359,7 @@
     <a class="voltar" th:href="@{/portal}">
         ← Voltar ao portal
     </a>
+
 </main>
 
 <footer>
@@ -300,6 +378,7 @@
     contador.textContent = campo.value.length;
 
     function validarPergunta() {
+
         if (!campo.value.trim()) {
             alert("Digite uma pergunta antes de enviar.");
             campo.focus();

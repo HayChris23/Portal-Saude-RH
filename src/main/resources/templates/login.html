@@ -1,245 +1,348 @@
 <!DOCTYPE html>
-
-<html lang="pt-BR">
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>Login - Portal Saúde RH</title>
 
-<title>Login - Portal Saúde RH</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
 
-<style>
-
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: Arial, sans-serif;
-    }
-
-    body {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #f4f7f9;
-        padding: 20px;
-    }
-
-    .container {
-        width: 900px;
-        max-width: 95%;
-        min-height: 520px;
-        background: white;
-        border-radius: 18px;
-        overflow: hidden;
-        display: grid;
-        grid-template-columns: 45% 55%;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-    }
-
-    .left {
-        background: #006b5f;
-        color: white;
-        padding: 55px 40px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    .left h1 {
-        font-size: 32px;
-        margin-bottom: 18px;
-    }
-
-    .left p {
-        line-height: 1.6;
-        opacity: 0.9;
-    }
-
-    .right {
-        padding: 55px 50px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    .logo {
-        margin-bottom: 35px;
-    }
-
-    .logo img {
-        width: 180px;
-        height: auto;
-        display: block;
-    }
-
-    .right h2 {
-        color: #243746;
-        margin-bottom: 10px;
-    }
-
-    .subtitle {
-        color: #64748b;
-        margin-bottom: 25px;
-        font-size: 14px;
-        line-height: 1.5;
-    }
-
-    form {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    form label {
-        color: #243746;
-        font-size: 14px;
-        font-weight: bold;
-        margin-top: 8px;
-    }
-
-    form input {
-        width: 100%;
-        padding: 14px;
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        font-size: 14px;
-        outline: none;
-        transition: border-color 0.2s;
-    }
-
-    form input:focus {
-        border-color: #006b5f;
-    }
-
-    .login-button {
-        width: 100%;
-        padding: 15px;
-        margin-top: 12px;
-        border: none;
-        border-radius: 8px;
-        background: #006b5f;
-        color: white;
-        font-size: 16px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-
-    .login-button:hover {
-        background: #005449;
-    }
-
-    .erro {
-        margin-top: 15px;
-        padding: 12px;
-        border-radius: 8px;
-        background: #fef2f2;
-        color: #b91c1c;
-        font-size: 14px;
-        text-align: center;
-    }
-
-    .info {
-        margin-top: 25px;
-        font-size: 12px;
-        color: #94a3b8;
-        text-align: center;
-        line-height: 1.5;
-    }
-
-    @media (max-width: 700px) {
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f4f7f9;
+            padding: 20px;
+        }
 
         .container {
-            grid-template-columns: 1fr;
+            width: 900px;
+            max-width: 95%;
+            min-height: 520px;
+            background: white;
+            border-radius: 18px;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 45% 55%;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
         }
 
         .left {
-            display: none;
+            background: #006b5f;
+            color: white;
+            padding: 55px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .left h1 {
+            font-size: 32px;
+            margin-bottom: 18px;
+        }
+
+        .left p {
+            line-height: 1.6;
+            opacity: 0.9;
         }
 
         .right {
-            padding: 40px 30px;
+            padding: 55px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
-    }
 
-</style>
+        .logo {
+            margin-bottom: 35px;
+        }
 
+        .logo img {
+            width: 180px;
+            height: auto;
+            display: block;
+        }
+
+        .right h2 {
+            color: #243746;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 25px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        form label {
+            color: #243746;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        form input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        form input:focus {
+            border-color: #006b5f;
+        }
+
+        /* Campo de senha com botão de visualização */
+        .campo-senha {
+            position: relative;
+            width: 100%;
+        }
+
+        .campo-senha input {
+            padding-right: 48px;
+        }
+
+        .botao-olho {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+        }
+
+        .botao-olho:hover {
+            color: #006b5f;
+        }
+
+        .botao-olho:focus-visible {
+            outline: 2px solid #006b5f;
+            border-radius: 4px;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #006b5f;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .login-button:hover {
+            background: #005449;
+        }
+
+        .erro {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            background: #fef2f2;
+            color: #b91c1c;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .info {
+            margin-top: 25px;
+            font-size: 12px;
+            color: #94a3b8;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 700px) {
+
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .left {
+                display: none;
+            }
+
+            .right {
+                padding: 40px 30px;
+            }
+        }
+    </style>
 
 </head>
 
 <body>
 
+    <div class="container">
 
-<div class="container">
+        <div class="left">
 
-    <div class="left">
+            <h1>Portal Saúde RH</h1>
 
-        <h1>Portal Saúde RH</h1>
+            <p>
+                Um canal digital para facilitar as solicitações,
+                o acompanhamento e a consulta de informações
+                relacionadas aos benefícios de saúde.
+            </p>
 
-        <p>
-            Um canal digital para facilitar as solicitações,
-            o acompanhamento e a consulta de informações
-            relacionadas aos benefícios de saúde.
-        </p>
+        </div>
+
+        <div class="right">
+
+            <div class="logo">
+                <img src="/images/logo-findes.png" alt="FINDES">
+            </div>
+
+            <h2>Acesse o Portal</h2>
+
+            <p class="subtitle">
+                Utilize sua conta corporativa para acessar os serviços
+                disponíveis.
+            </p>
+
+            <form action="/login" method="post">
+
+                <label for="email">E-mail corporativo</label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Digite seu e-mail"
+                    autocomplete="username"
+                    required
+                >
+
+                <label for="senha">Senha</label>
+
+                <div class="campo-senha">
+
+                    <input
+                        type="password"
+                        id="senha"
+                        name="senha"
+                        placeholder="Digite sua senha"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        id="mostrarSenha"
+                        class="botao-olho"
+                        aria-label="Mostrar senha"
+                        title="Mostrar senha"
+                        aria-pressed="false"
+                    >
+
+                        <svg
+                            id="iconeOlho"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="22"
+                            height="22"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
+                            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+
+                    </button>
+
+                </div>
+
+                <button type="submit" class="login-button">
+                    Entrar com conta corporativa
+                </button>
+
+            </form>
+
+            <div th:if="${erro}" class="erro">
+                <span th:text="${erro}"></span>
+            </div>
+
+            <div class="info">
+                Acesso destinado aos colaboradores autorizados.
+            </div>
+
+        </div>
 
     </div>
 
-    <div class="right">
+    <script>
+        const campoSenha = document.getElementById("senha");
+        const botaoOlho = document.getElementById("mostrarSenha");
+        const iconeOlho = document.getElementById("iconeOlho");
 
-        <div class="logo">
-            <img src="/images/logo-findes.png" alt="FINDES">
-        </div>
+        botaoOlho.addEventListener("click", function () {
 
-        <h2>Acesse o Portal</h2>
+            const mostrar = campoSenha.type === "password";
 
-        <p class="subtitle">
-            Utilize sua conta corporativa para acessar os serviços
-            disponíveis.
-        </p>
+            campoSenha.type = mostrar ? "text" : "password";
 
-        <form action="/login" method="post">
+            botaoOlho.setAttribute(
+                "aria-label",
+                mostrar ? "Ocultar senha" : "Mostrar senha"
+            );
 
-            <label for="email">E-mail corporativo</label>
+            botaoOlho.setAttribute(
+                "title",
+                mostrar ? "Ocultar senha" : "Mostrar senha"
+            );
 
-            <input
-                type="email"
-                id="email"
-                name="email"
-                placeholder="Digite seu e-mail"
-                required
-            >
+            botaoOlho.setAttribute(
+                "aria-pressed",
+                mostrar ? "true" : "false"
+            );
 
-            <label for="senha">Senha</label>
-
-            <input
-                type="password"
-                id="senha"
-                name="senha"
-                placeholder="Digite sua senha"
-                required
-            >
-
-            <button type="submit" class="login-button">
-                Entrar com conta corporativa
-            </button>
-
-        </form>
-
-        <div th:if="${erro}" class="erro">
-            <span th:text="${erro}"></span>
-        </div>
-
-        <div class="info">
-            Acesso destinado aos colaboradores autorizados.
-        </div>
-
-    </div>
-
-</div>
+            if (mostrar) {
+                iconeOlho.innerHTML = `
+                    <path d="M3 3l18 18"/>
+                    <path d="M10.6 10.6a2 2 0 002.8 2.8"/>
+                    <path d="M9.9 5.2A11 11 0 0112 5c6.4 0 10 7 10 7a16 16 0 01-3.2 4.1"/>
+                    <path d="M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7c1.5 0 2.8-.4 4-1"/>
+                `;
+            } else {
+                iconeOlho.innerHTML = `
+                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                `;
+            }
+        });
+    </script>
 
 </body>
-
 </html>

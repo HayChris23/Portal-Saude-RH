@@ -1,6 +1,7 @@
 package br.com.portal.saudereh.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "usuario")
@@ -27,6 +28,11 @@ public class Usuario {
 
     @Column(nullable = false)
     private Boolean ativo = true;
+
+    @Column(nullable = false)
+    private Integer tentativasLogin = 0;
+
+    private LocalDateTime bloqueadoAte;
 
     public Usuario() {
     }
@@ -85,5 +91,21 @@ public class Usuario {
 
     public void setAtivo(Boolean ativo) {
         this.ativo = ativo;
+    }
+
+    public Integer getTentativasLogin() {
+    return tentativasLogin;
+    }
+
+    public void setTentativasLogin(Integer tentativasLogin) {
+    this.tentativasLogin = tentativasLogin;
+    }
+
+    public LocalDateTime getBloqueadoAte() {
+    return bloqueadoAte;
+    }
+
+    public void setBloqueadoAte(LocalDateTime bloqueadoAte) {
+    this.bloqueadoAte = bloqueadoAte;
     }
 }

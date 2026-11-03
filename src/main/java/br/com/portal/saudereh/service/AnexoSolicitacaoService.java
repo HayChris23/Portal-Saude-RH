@@ -17,8 +17,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
+
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 public class AnexoSolicitacaoService {
@@ -115,6 +117,8 @@ public class AnexoSolicitacaoService {
 
                 anexosSalvos.add(anexoRepository.save(anexo));
             }
+
+            registrarLimpezaEmCasoDeRollback(arquivosCriados);
 
             return anexosSalvos;
 
@@ -229,4 +233,35 @@ public class AnexoSolicitacaoService {
                     "Tipo de arquivo não permitido.");
         };
     }
+
+    private void registrarLimpezaEmCasoDeRollback(
+        List<Path> arquivosCriados) {
+
+    if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+        return;
+    }
+
+    TransactionSynchronizationManager.registerSynchronization(
+            new TransactionSynchronization() {
+
+                @Override
+                public void afterCompletion(int status) {
+
+                    if (status == STATUS_ROLLED_BACK) {
+
+                        for (Path caminho : arquivosCriados) {
+                            try {
+                                Files.deleteIfExists(caminho);
+                            } catch (IOException e) {
+                                System.err.println(
+                                        "Não foi possível excluir arquivo após rollback: "
+                                                + caminho);
+                            }
+                        }
+                    }
+                }
+            }
+    );
+}
+
 }

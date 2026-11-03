@@ -7,6 +7,7 @@ import br.com.portal.saudereh.repository.RespostaSolicitacaoRepository;
 import br.com.portal.saudereh.repository.SolicitacaoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,12 +17,16 @@ public class RespostaSolicitacaoService {
 
     private final RespostaSolicitacaoRepository respostaRepository;
     private final SolicitacaoRepository solicitacaoRepository;
+    private final AnexoRespostaService anexoRespostaService;
 
     public RespostaSolicitacaoService(
             RespostaSolicitacaoRepository respostaRepository,
-            SolicitacaoRepository solicitacaoRepository) {
+            SolicitacaoRepository solicitacaoRepository,
+            AnexoRespostaService anexoRespostaService){
+
         this.respostaRepository = respostaRepository;
         this.solicitacaoRepository = solicitacaoRepository;
+        this.anexoRespostaService = anexoRespostaService;
     }
 
     @Transactional
@@ -64,6 +69,29 @@ public class RespostaSolicitacaoService {
 
         return respostaRepository.save(resposta);
     }
+
+@Transactional
+public RespostaSolicitacao registrarRespostaComAnexos(
+        Long solicitacaoId,
+        Usuario usuarioResponsavel,
+        String comentario,
+        MultipartFile[] arquivos) {
+
+    RespostaSolicitacao resposta = registrarResposta(
+            solicitacaoId,
+            usuarioResponsavel,
+            comentario
+    );
+
+    if (arquivos != null && arquivos.length > 0) {
+        anexoRespostaService.armazenarArquivos(
+                resposta,
+                arquivos
+        );
+    }
+
+    return resposta;
+}
 
     @Transactional(readOnly = true)
     public List<RespostaSolicitacao> listarRespostas(Long solicitacaoId) {

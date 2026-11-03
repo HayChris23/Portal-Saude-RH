@@ -335,10 +335,7 @@
         <div th:if="${usuario.perfil == 'COLABORADOR'}">
             <a th:href="@{/nova-solicitacao}" class="menu-item">➕ Nova Solicitação</a>
             <a th:href="@{/solicitacoes}" class="menu-item">📋 Minhas Solicitações</a>
-            <a href="#" class="menu-item"
-               onclick="alert('O Assistente Saúde RH ainda será implementado.'); return false;">
-                🤖 Assistente Saúde RH
-            </a>
+            <a th:href="@{/assistente}" class="menu-item"> 🤖 Assistente Saúde RH</a>
         </div>
 
         <!-- Menu do administrador do plano -->
@@ -414,11 +411,10 @@
                     <p>Consulte seus protocolos e acompanhe o atendimento.</p>
                 </a>
 
-                <a href="#" class="quick-card"
-                   onclick="alert('O Assistente Saúde RH ainda será implementado.'); return false;">
+                <a th:href="@{/assistente}" class="quick-card">
                     <div class="icon">🤖</div>
                     <h3>Assistente Saúde RH</h3>
-                    <p>Área reservada para esclarecer dúvidas sobre o plano de saúde.</p>
+                    <p>Esclareça suas dúvidas sobre o plano de saúde com nosso assistente virtual.</p>
                 </a>
             </div>
         </section>

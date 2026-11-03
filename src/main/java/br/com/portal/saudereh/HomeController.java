@@ -13,8 +13,10 @@ import br.com.portal.saudereh.service.HistoricoSolicitacaoService;
 import br.com.portal.saudereh.service.RespostaSolicitacaoService;
 import br.com.portal.saudereh.service.AnexoRespostaService;
 import br.com.portal.saudereh.service.AnexoSolicitacaoService;
+import br.com.portal.saudereh.service.AutenticacaoResultado;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -86,24 +88,30 @@ public class HomeController {
         return "login";
     }
 
-    @PostMapping("/login")
-    public String realizarLogin(
-            @RequestParam String email,
-            @RequestParam String senha,
-            HttpSession session,
-            Model model) {
 
-        Usuario usuario = autenticacaoService.autenticar(email, senha);
+@PostMapping("/login")
+public String realizarLogin(
+        @RequestParam String email,
+        @RequestParam String senha,
+        HttpSession session,
+        HttpServletRequest request,
+        Model model) {
 
-        if (usuario == null) {
-            model.addAttribute("erro", "E-mail ou senha inválidos.");
-            return "login";
-        }
+    AutenticacaoResultado resultado =
+            autenticacaoService.autenticar(email, senha);
 
-        session.setAttribute("usuario", usuario);
-
-        return "redirect:/portal";
+    if (!resultado.autenticado()) {
+        model.addAttribute("erro", resultado.mensagemErro());
+        return "login";
     }
+
+    Usuario usuario = resultado.usuario();
+
+    request.changeSessionId();
+    session.setAttribute("usuario", usuario);
+
+    return "redirect:/portal";
+}
 
     @GetMapping("/portal")
     public String portal(HttpSession session, Model model) {
@@ -147,26 +155,22 @@ public class HomeController {
         }
 
         try {
-            Solicitacao solicitacao =
-                    solicitacaoService.criarSolicitacao(
-                            usuario,
-                            categoria,
-                            descricao
-                    );
-
-            if (arquivo != null && !arquivo.isEmpty()) {
-                anexoSolicitacaoService.armazenarArquivos(
-                    solicitacao,
-                    new MultipartFile[]{arquivo}
-            );
-            }
+        Solicitacao solicitacao =
+        solicitacaoService.criarSolicitacaoComAnexos(
+                usuario,
+                categoria,
+                descricao,
+                arquivo != null && !arquivo.isEmpty()
+                        ? new MultipartFile[]{arquivo}
+                        : new MultipartFile[0]
+        );
 
             model.addAttribute("usuario", usuario);
             model.addAttribute("solicitacao", solicitacao);
 
             return "sucesso";
 
-            
+
 
             } catch (IllegalArgumentException e) {
             model.addAttribute("erro", e.getMessage());
@@ -316,7 +320,7 @@ public class HomeController {
     // Colaboradores consultam somente suas solicitações.
     // Perfis administrativos podem consultar todas.
     @GetMapping("/solicitacoes")
-public String listarSolicitacoes(
+    public String listarSolicitacoes(
         @RequestParam(required = false) String protocolo,
         @RequestParam(required = false) String status,
         @RequestParam(required = false) Long categoriaId,
@@ -352,6 +356,18 @@ public String listarSolicitacoes(
                 dataFinal,
                 usuarioIdPesquisa
         );
+        System.out.println("TESTE 1: Pesquisa de solicitações concluída.");
+
+    if (protocolo != null
+                && !protocolo.isBlank()
+                && solicitacoes.isEmpty()) {
+
+            model.addAttribute(
+                    "erro",
+                    "Nenhuma solicitação foi encontrada para o protocolo informado."
+            );
+        }
+
         System.out.println("TESTE 1: Pesquisa de solicitações concluída.");
 
     } catch (IllegalArgumentException e) {
@@ -537,16 +553,11 @@ public String exibirFormularioResposta(
     }
 
     try {
-        RespostaSolicitacao resposta =
-                respostaSolicitacaoService.registrarResposta(
-                        id,
-                        usuario,
-                        comentario
-                );
-
-        anexoRespostaService.armazenarArquivos(
-                resposta,
-                arquivos
+        respostaSolicitacaoService.registrarRespostaComAnexos(
+        id,
+        usuario,
+        comentario,
+        arquivos
         );
 
         redirectAttributes.addFlashAttribute(
@@ -659,13 +670,29 @@ public String exibirFormularioResposta(
         return "redirect:/solicitacoes";
     }
 }
- 
+
     @GetMapping("/dashboard")
-    public String dashboard(HttpSession session, Model model) {
-    Usuario usuario = (Usuario) session.getAttribute("usuario");
+    public String dashboard(
+        HttpSession session,
+        Model model,
+        RedirectAttributes redirectAttributes) {
+
+
+    Usuario usuario = usuarioLogado(session);
 
     if (usuario == null) {
         return "redirect:/login";
+    }
+
+    if (usuario.getPerfil() == null
+           || !RH_GESTOR.equalsIgnoreCase(usuario.getPerfil().trim())) {
+
+    redirectAttributes.addFlashAttribute(
+            "erro",
+            "Você não tem permissão para acessar o dashboard."
+    );
+
+        return "redirect:/portal";
     }
 
     model.addAttribute("totalSolicitacoes",
