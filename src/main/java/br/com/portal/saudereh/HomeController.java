@@ -137,6 +137,7 @@ public String realizarLogin(
         }
 
         model.addAttribute("usuario", usuario);
+        model.addAttribute("categorias", categoriaService.listarAtivas());
         return "nova-solicitacao";
     }
 
@@ -175,6 +176,8 @@ public String realizarLogin(
             } catch (IllegalArgumentException e) {
             model.addAttribute("erro", e.getMessage());
             model.addAttribute("usuario", usuario);
+            model.addAttribute("categorias", categoriaService.listarAtivas());
+
             return "nova-solicitacao";
 
             } catch (RuntimeException e) {
@@ -183,6 +186,8 @@ public String realizarLogin(
                     "Não foi possível salvar o anexo. Verifique o arquivo e tente novamente."
                 );
                 model.addAttribute ("usuario", usuario);
+                model.addAttribute("categorias", categoriaService.listarAtivas());
+                
                 return "nova-solicitacao";
             }
     }
@@ -414,7 +419,7 @@ System.out.println("TESTE 3: Preparando a página solicitacoes.");
                     "erro",
                     "Você não tem permissão para atualizar solicitações."
             );
-            return "redirect:/solicitacoes";
+            return "redirect:/solicitacoes/" + id + "/historico";
         }
 
         try {
@@ -428,7 +433,7 @@ System.out.println("TESTE 3: Preparando a página solicitacoes.");
             redirectAttributes.addFlashAttribute("erro", e.getMessage());
         }
 
-        return "redirect:/solicitacoes";
+        return "redirect:/solicitacoes/" + id + "/historico";
     }
 
 
@@ -485,13 +490,16 @@ public String exibirFormularioResposta(
         return "redirect:/login";
     }
 
-    if (!podeAdministrar(usuario)) {
-        redirectAttributes.addFlashAttribute(
-                "erro",
-                "Você não tem permissão para responder às solicitações."
-        );
-        return "redirect:/solicitacoes";
-    }
+    if (!podeAdministrar(usuario)
+        && !COLABORADOR.equalsIgnoreCase(usuario.getPerfil().trim())) {
+
+    redirectAttributes.addFlashAttribute(
+            "erro",
+            "Você não tem permissão para responder às solicitações."
+    );
+
+    return "redirect:/solicitacoes";
+}
 
     try {
         Solicitacao solicitacao = solicitacaoService.buscarPorId(id);
@@ -544,13 +552,32 @@ public String exibirFormularioResposta(
         return "redirect:/login";
     }
 
-    if (!podeAdministrar(usuario)) {
+    if (!podeAdministrar(usuario) 
+        && !COLABORADOR.equalsIgnoreCase(usuario.getPerfil().trim())) {
+
+    redirectAttributes.addFlashAttribute(
+            "erro",
+            "Você não tem permissão para responder às solicitações."
+    );
+
+    return "redirect:/solicitacoes";
+}
+
+    // O colaborador só pode responder quando a solicitação estiver pendente.
+    if (COLABORADOR.equalsIgnoreCase(usuario.getPerfil().trim())) {
+
+    Solicitacao solicitacao = solicitacaoService.buscarPorId(id);
+
+    if (!"Pendente".equalsIgnoreCase(solicitacao.getStatus())) {
+
         redirectAttributes.addFlashAttribute(
                 "erro",
-                "Você não tem permissão para responder às solicitações."
+                "Você só pode responder quando a solicitação estiver pendente."
         );
-        return "redirect:/solicitacoes";
+
+        return "redirect:/solicitacoes/" + id + "/historico";
     }
+}
 
     try {
         respostaSolicitacaoService.registrarRespostaComAnexos(
@@ -565,18 +592,18 @@ public String exibirFormularioResposta(
                 "Resposta registrada com sucesso!"
         );
 
-        return "redirect:/solicitacoes/" + id + "/responder";
+        return "redirect:/solicitacoes/" + id + "/historico";
 
     } catch (IllegalArgumentException e) {
         redirectAttributes.addFlashAttribute("erro", e.getMessage());
-        return "redirect:/solicitacoes/" + id + "/responder";
+        return "redirect:/solicitacoes/" + id + "/historico";
 
     } catch (RuntimeException e) {
         redirectAttributes.addFlashAttribute(
                 "erro",
                 "Não foi possível registrar a resposta e seus anexos. Tente novamente."
         );
-        return "redirect:/solicitacoes/" + id + "/responder";
+        return "redirect:/solicitacoes/" + id + "/historico";
     }
 }
 
@@ -605,6 +632,9 @@ public String exibirFormularioResposta(
                 solicitacao.getUsuario() != null
                 && solicitacao.getUsuario().getId() != null
                 && solicitacao.getUsuario().getId().equals(usuario.getId());
+
+        model.addAttribute("usuario", usuario);
+        model.addAttribute("perfilAdministrativo", administrativo);
 
         if (!administrativo && !donoDaSolicitacao) {
             redirectAttributes.addFlashAttribute(

@@ -14,7 +14,7 @@
         }
 
         body {
-            background: #f4f8fb;
+            background: #f4f7f9;
             color: #263238;
         }
 
@@ -29,7 +29,7 @@
         }
 
         .logo {
-            color: #0066b3;
+            color: #006b5f;
             font-size: 21px;
             font-weight: bold;
         }
@@ -38,11 +38,77 @@
             color: #263238;
         }
 
-        .user {
-            color: #4c575f;
+        .logout-link {
+            color: #006b5f;
+            background: #ffffff;
+            text-decoration: none;
             font-size: 14px;
-            text-align: right;
+            font-weight: bold;
+            margin-left: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: 0.2s;
         }
+
+        .logout-link:hover {
+            color: #005449;
+            background: #eaf4f1;
+            text-decoration: none;
+        }
+
+
+        .user-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    color: #263238;
+    font-size: 14px;
+}
+
+.user-info .profile {
+    font-size: 12px;
+    color: #71808a;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #006b5f;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.logout-link {
+    color: #006b5f;
+    background: #ffffff;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: bold;
+    margin-left: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: 0.2s;
+    white-space: nowrap;
+}
+
+.logout-link:hover {
+    color: #005449;
+    background: #eaf4f1;
+}
+
+
 
         main {
             max-width: 1250px;
@@ -103,7 +169,7 @@
             border: none;
             border-radius: 7px;
             padding: 12px 18px;
-            background: #0066b3;
+            background: #006b5f;
             color: white;
             text-decoration: none;
             font-weight: bold;
@@ -117,8 +183,8 @@
 
         .button.secondary {
             background: white;
-            color: #0066b3;
-            border: 1px solid #0066b3;
+            color: #006b5f;
+            border: 1px solid #006b5f;  
         }
 
         .message {
@@ -166,7 +232,7 @@
             border-radius: 20px;
             padding: 6px 10px;
             background: #eaf4fb;
-            color: #0066b3;
+            color: #006b5f;
             font-weight: bold;
             white-space: nowrap;
         }
@@ -228,22 +294,33 @@
 
 <body>
 
+
 <header>
     <div class="logo">Portal <span>Saúde RH</span></div>
 
-    <div class="user">
-        Olá, <strong th:text="${usuario.nome}">Usuário</strong>
-        <br>
-        <span th:text="${usuario.perfil}">Perfil</span>
+    <div class="user-area">
+
+        <div class="user-info">
+            <span th:text="${usuario.nome}">Hayane</span>
+            <span class="profile"
+                  th:text="${usuario.perfil}">COLABORADOR</span>
+        </div>
+
+        <div class="avatar"
+             th:text="${#strings.substring(usuario.nome, 0, 1).toUpperCase()}">
+            H
+        </div>
+
+        <a th:href="@{/logout}" class="logout-link">Sair</a>
+
     </div>
 </header>
-
 <main>
 
     <h1>Solicitações</h1>
 
     <p class="subtitle" th:if="${perfilAdministrativo}">
-        Consulte os protocolos, acompanhe os atendimentos e atualize os status.
+        Consulte os protocolos, acompanhe os atendimentos e acesse o histórico das solicitações.
     </p>
 
     <p class="subtitle" th:unless="${perfilAdministrativo}">
@@ -331,6 +408,10 @@
                 Limpar filtros
             </a>
 
+            <a th:href="@{/portal}" class="button secondary">
+            Voltar ao portal
+            </a>
+
         </form>
 
     </section>
@@ -348,11 +429,9 @@
                         <th th:if="${perfilAdministrativo}">Colaborador</th>
                         <th>Categoria</th>
                         <th>Descrição</th>
-                        <th>Abertura</th>
+                        <th>Data da Abertura</th>
                         <th>Status atual</th>
                         <th>Histórico</th>
-                        <th th:if="${perfilAdministrativo}">Resposta</th>
-                        <th th:if="${perfilAdministrativo}">Atualizar status</th>
                         <th th:if="${perfilAdministrativo}">Ações</th>
                     </tr>
                 </thead>
@@ -422,69 +501,22 @@
                         </td>
 
                         <td>
-                            <span class="status"
-                                  th:text="${solicitacao.status}">
-                                Aberta
-                            </span>
-                        </td>
+                        <span class="status" th:text="${solicitacao.status}">
+                            Aberta
+                        </span>
+
+                        <p th:if="${!perfilAdministrativo and solicitacao.status == 'Concluída'}"
+                            style="margin-top: 10px; color: #b42318; font-size: 12px; line-height: 1.5; max-width: 260px;"> Esta solicitação já foi concluída.
+                            Se precisar de um novo atendimento, abra outra solicitação.
+    </p>
+</td>
 
                         <td>
                         <a th:href="@{/solicitacoes/{id}/historico(id=${solicitacao.id})}"
                         class="button secondary"> Ver histórico </a>
                         </td>
 
-                        <td th:if="${perfilAdministrativo}">
-                        <a th:href="@{/solicitacoes/{id}/responder(id=${solicitacao.id})}"  
-                        class="button"> Responder
-                        </a>
-                        </td>
-
-                        <td th:if="${perfilAdministrativo}">
-
-                            <form th:action="@{/solicitacoes/{id}/status(id=${solicitacao.id})}"
-                                  method="post"
-                                  class="status-form">
-
-                                <select name="status" aria-label="Novo status">
-
-                                    <option value="Aberta"
-                                            th:selected="${solicitacao.status == 'Aberta'}">
-                                        Aberta
-                                    </option>
-
-                                    <option value="Em análise"
-                                            th:selected="${solicitacao.status == 'Em análise'}">
-                                        Em análise
-                                    </option>
-
-                                    <option value="Pendente"
-                                            th:selected="${solicitacao.status == 'Pendente'}">
-                                        Pendente
-                                    </option>
-
-                                    <option value="Concluída"
-                                            th:selected="${solicitacao.status == 'Concluída'}">
-                                        Concluída
-                                    </option>
-
-                                    <option value="Cancelada"
-                                            th:selected="${solicitacao.status == 'Cancelada'}">
-                                        Cancelada
-                                    </option>
-
-                                </select>
-
-                                <button type="submit" class="button">
-                                    Salvar
-                                </button>
-
-                            </form>
-
-                        </td>
-
-
-
-
+  
      <td th:if="${perfilAdministrativo}">
     <form th:action="@{/solicitacoes/{id}/excluir(id=${solicitacao.id})}"
           method="post"
@@ -499,7 +531,7 @@
                     </tr>  
 
                     <tr th:if="${#lists.isEmpty(solicitacoes)}">
-                        <td colspan="9" class="empty">
+                        <td th:attr="colspan=${perfilAdministrativo ? 8 : 6}" class="empty">
                             Nenhuma solicitação encontrada para os filtros informados.
                         </td>
                     </tr>
@@ -509,13 +541,6 @@
             </table>
 
         </div>
-
-        <div class="footer-actions">
-            <a th:href="@{/portal}" class="button secondary">
-                Voltar ao portal
-            </a>
-        </div>
-
     </section>
 
 </main>

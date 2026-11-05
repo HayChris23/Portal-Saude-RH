@@ -5,6 +5,8 @@ import br.com.portal.saudereh.model.Solicitacao;
 import br.com.portal.saudereh.model.Usuario;
 import br.com.portal.saudereh.repository.RespostaSolicitacaoRepository;
 import br.com.portal.saudereh.repository.SolicitacaoRepository;
+import br.com.portal.saudereh.model.HistoricoSolicitacao;
+import br.com.portal.saudereh.repository.HistoricoSolicitacaoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,15 +20,18 @@ public class RespostaSolicitacaoService {
     private final RespostaSolicitacaoRepository respostaRepository;
     private final SolicitacaoRepository solicitacaoRepository;
     private final AnexoRespostaService anexoRespostaService;
+    private final HistoricoSolicitacaoRepository historicoRepository;
 
     public RespostaSolicitacaoService(
             RespostaSolicitacaoRepository respostaRepository,
             SolicitacaoRepository solicitacaoRepository,
-            AnexoRespostaService anexoRespostaService){
+            AnexoRespostaService anexoRespostaService,
+            HistoricoSolicitacaoRepository historicoRepository) {
 
         this.respostaRepository = respostaRepository;
         this.solicitacaoRepository = solicitacaoRepository;
         this.anexoRespostaService = anexoRespostaService;
+        this.historicoRepository = historicoRepository;
     }
 
     @Transactional
@@ -44,22 +49,45 @@ public class RespostaSolicitacaoService {
         String perfil = usuarioResponsavel.getPerfil();
 
         if (perfil == null
-                || !(perfil.trim().equalsIgnoreCase("ADM_PLANO_SAUDE")
-                || perfil.trim().equalsIgnoreCase("RH_GESTOR"))) {
-            throw new IllegalArgumentException(
-                    "Você não tem permissão para responder solicitações.");
-        }
+        || !(perfil.trim().equalsIgnoreCase("ADM_PLANO_SAUDE")
+        || perfil.trim().equalsIgnoreCase("RH_GESTOR")
+        || perfil.trim().equalsIgnoreCase("COLABORADOR"))) {
+
+        throw new IllegalArgumentException(
+            "Você não tem permissão para responder solicitações.");
+}
 
         if (comentario == null || comentario.isBlank()) {
             throw new IllegalArgumentException(
                     "O comentário da resposta é obrigatório.");
         }
 
+// Valida se o colaborador está respondendo à própria solicitação.
         Solicitacao solicitacao = solicitacaoRepository
                 .findById(solicitacaoId)
                 .filter(s -> Boolean.TRUE.equals(s.getAtivo()))
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Solicitação não encontrada ou inativa."));
+
+// Valida se o colaborador está respondendo à própria solicitação.
+        if (perfil.trim().equalsIgnoreCase("COLABORADOR")) {
+
+        if (solicitacao.getUsuario() == null
+            || !solicitacao.getUsuario().getId()
+                    .equals(usuarioResponsavel.getId())) {
+
+        throw new IllegalArgumentException(
+                "Você só pode responder às suas próprias solicitações.");
+        }
+}
+
+// O colaborador só pode responder enquanto a solicitação estiver pendente.
+        if (perfil.trim().equalsIgnoreCase("COLABORADOR")
+        && !"Pendente".equalsIgnoreCase(solicitacao.getStatus())) {
+
+        throw new IllegalArgumentException(
+            "Você só pode responder quando a solicitação estiver pendente.");
+        }
 
         RespostaSolicitacao resposta = new RespostaSolicitacao();
         resposta.setSolicitacao(solicitacao);
@@ -67,7 +95,25 @@ public class RespostaSolicitacaoService {
         resposta.setComentario(comentario.trim());
         resposta.setDataResposta(LocalDateTime.now());
 
-        return respostaRepository.save(resposta);
+        RespostaSolicitacao respostaSalva =
+        respostaRepository.save(resposta);
+
+        // Registra automaticamente a resposta nas movimentações.
+                HistoricoSolicitacao historico = new HistoricoSolicitacao();
+
+        historico.setSolicitacao(solicitacao);
+        historico.setUsuario(usuarioResponsavel);
+        historico.setDataHora(LocalDateTime.now());
+        historico.setAcao("Resposta registrada");
+        historico.setStatusAnterior(null);
+        historico.setNovoStatus(null);
+        historico.setObservacao(
+                "Uma resposta foi registrada no atendimento."
+        );
+
+        historicoRepository.save(historico);
+
+        return respostaSalva;
     }
 
 @Transactional

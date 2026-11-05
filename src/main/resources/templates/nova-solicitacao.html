@@ -14,7 +14,7 @@
         }
 
         body {
-            background: #f4f8fb;
+            background: #f4f7f9;
             color: #263238;
         }
 
@@ -31,7 +31,7 @@
         .logo {
             font-size: 22px;
             font-weight: bold;
-            color: #0066b3;
+            color: #006b5f;
         }
 
         .logo span {
@@ -49,7 +49,7 @@
             width: 38px;
             height: 38px;
             border-radius: 50%;
-            background: #0066b3;
+            background: #006b5f;
             color: white;
             display: flex;
             align-items: center;
@@ -89,12 +89,12 @@
 
         .menu-item:hover {
             background: #eaf4fb;
-            color: #0066b3;
+            color: #006b5f;
         }
 
         .menu-item.active {
             background: #e5f1f9;
-            color: #0066b3;
+            color: #006b6f;
             font-weight: bold;
         }
 
@@ -112,7 +112,7 @@
         }
 
         .breadcrumb a {
-            color: #0066b3;
+            color: #006b5f;
             text-decoration: none;
         }
 
@@ -182,7 +182,7 @@
         textarea:focus,
         input[type="file"]:focus {
             outline: none;
-            border-color: #0066b3;
+            border-color: #006b5f;
             box-shadow: 0 0 0 3px #eaf4fb;
         }
 
@@ -225,19 +225,57 @@
         }
 
         .cancel-button {
-            border: 1px solid #0066b3;
+            border: 1px solid #006b5f;
             background: white;
-            color: #0066b3;
+            color: #006b5f;
         }
 
         .cancel-button:hover {
             background: #eaf4fb;
         }
 
+        .back-button {
+            background: #006b5f;
+            color: #ffffff;
+            border: 1px solid #006b5f;
+            display: inline-block;
+            padding: 12px 22px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .back-button:hover {
+            background: #245582;
+            border-color: #245582;
+            color: #ffffff;
+        }
+
         .submit-button {
             border: none;
-            background: #0066b3;
+            background: #006b5f;
             color: white;
+        }
+
+        .logout-link {
+            color: #006b5f;
+            background: #ffffff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+
+        .logout-link:hover {
+            color: #005449;
+            background: #eaf4f1;
+            text-decoration: none;
         }
 
         .submit-button:hover {
@@ -285,6 +323,7 @@
                 align-items: stretch;
             }
 
+            .back-button,
             .cancel-button,
             .submit-button {
                 width: 100%;
@@ -301,14 +340,20 @@
     </div>
 
     <div class="user-area">
-        <span th:text="${session.usuario != null ? session.usuario.nome : 'Colaborador'}">
-            Colaborador
-        </span>
 
-        <div class="avatar"
-             th:text="${session.usuario != null ? #strings.substring(session.usuario.nome, 0, 1).toUpperCase() : 'C'}">
-            C
-        </div>
+    <span th:text="${session.usuario != null ? session.usuario.nome : 'Colaborador'}">
+        Colaborador
+    </span>
+
+    <div class="avatar"
+         th:text="${session.usuario != null ? #strings.substring(session.usuario.nome, 0, 1).toUpperCase() : 'C'}">
+        C
+    </div>
+
+    <a th:href="@{/logout}" class="logout-link">
+        Sair
+    </a>
+
     </div>
 </header>
 
@@ -378,32 +423,9 @@
                             Selecione uma categoria
                         </option>
 
-                        <option value="Autorização de exame">
-                            Autorização de exame
-                        </option>
-
-                        <option value="Renovação de guia">
-                            Renovação de guia
-                        </option>
-
-                        <option value="Número/cartão do plano">
-                            Número/cartão do plano
-                        </option>
-
-                        <option value="Dúvida sobre utilização">
-                            Dúvida sobre utilização
-                        </option>
-
-                        <option value="Dúvida sobre valores">
-                            Dúvida sobre valores
-                        </option>
-
-                        <option value="Documentação">
-                            Documentação
-                        </option>
-
-                        <option value="Outros">
-                            Outros
+                        <option th:each="categoria : ${categorias}"
+                            th:value="${categoria.nome}"
+                            th:text="${categoria.nome}">
                         </option>
 
                     </select>
@@ -441,6 +463,10 @@
                 </div>
 
                 <div class="form-actions">
+                    <a th:href="@{/portal}" class="back-button">
+                        Voltar ao portal
+                    </a>
+                                 
                     <a th:href="@{/portal}" class="cancel-button">
                         Cancelar
                     </a>

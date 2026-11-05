@@ -79,4 +79,9 @@ public class CategoriaService {
         categoria.setAtivo(false);
         categoriaRepository.save(categoria);
     }
+
+    public List<Categoria> listarAtivas() {
+        return categoriaRepository.findByAtivoTrueOrderByNomeAsc();
+}
+
 }

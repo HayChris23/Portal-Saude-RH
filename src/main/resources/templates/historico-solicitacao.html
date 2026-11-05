@@ -15,7 +15,7 @@
             margin: 0;
             padding: 30px;
             font-family: Arial, sans-serif;
-            background: #f4f6f9;
+            background: #f4f7f9;    
             color: #263238;
         }
 
@@ -33,9 +33,12 @@
             margin-bottom: 25px;
         }
 
+        h1, h2, .formulario h3 {
+            color:#006b5f;
+        }
+
         h1 {
             margin: 0 0 8px;
-            color: #17365d;
         }
 
         .subtitulo {
@@ -94,7 +97,7 @@
         }
 
         th {
-            background: #17365d;
+            background: #006b5f;
             color: white;
             font-size: 13px;
         }
@@ -114,14 +117,75 @@
         }
 
         .botao-voltar {
-            background: #17365d;
+            background: #006b5f;
             color: white;
+        }
+
+        .botao-voltar:hover,
+        .botao-salvar:hover {
+            background: #005449;
         }
 
         .vazio {
             text-align: center;
             padding: 30px;
             color: #64748b;
+        }
+
+        .formulario {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+
+        .formulario h3 {
+            color: #17365d;
+            margin-top: 0;
+        }
+
+        .formulario label {
+            display: block;
+            font-weight: bold;
+            margin: 14px 0 7px;
+        }
+
+        .formulario select,
+        .formulario textarea,
+        .formulario input[type="file"] {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-family: Arial, sans-serif;
+        }
+
+        .formulario textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        .botao-salvar {
+            background: #006b5f;
+            color: white;
+            margin-top: 15px;
+        }
+
+        .alerta {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .alerta-sucesso {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .alerta-erro {
+            background: #fee2e2;
+            color: #991b1b;
         }
 
         @media (max-width: 650px) {
@@ -156,75 +220,80 @@
         </a>
     </div>
 
-    <section class="card">
-        <h2>Dados da solicitação</h2>
+        <!-- Dados da solicitação e documentos -->
+<section class="card">
 
-        <div class="dados">
-            <div class="campo">
-                <strong>Protocolo</strong>
-                <span th:text="${solicitacao.protocolo}">PSRH-000000</span>
-            </div>
+    <h2>Dados da solicitação e documentos</h2>
 
-            <div class="campo">
-                <strong>Categoria</strong>
-                <span th:text="${solicitacao.categoria != null ? solicitacao.categoria.nome : 'Não informada'}">
-                    Categoria
-                </span>
-            </div>
+    <div class="dados">
 
-            <div class="campo">
-                <strong>Status atual</strong>
-                <span th:text="${solicitacao.status}">Aberta</span>
-            </div>
-
-            <div class="campo">
-                <strong>Data de abertura</strong>
-                <span th:text="${solicitacao.dataAbertura != null ? #temporals.format(solicitacao.dataAbertura, 'dd/MM/yyyy HH:mm') : 'Não informada'}">
-                    01/01/2026
-                </span>
-            </div>
+        <div class="campo">
+            <strong>Protocolo</strong>
+            <span th:text="${solicitacao.protocolo}">PSRH-000000</span>
         </div>
 
-        <div class="descricao">
-            <strong>Descrição:</strong>
-            <p th:text="${solicitacao.descricao}"></p>
-        </div>
-    </section>
-
-   
-    <!-- Anexos enviados pelo colaborador -->
-    <section class="card">
-        <h2>Documentos enviados na solicitação</h2>
-
-        <div th:if="${#lists.isEmpty(anexosSolicitacao)}"
-             class="vazio">
-            Nenhum documento foi anexado na abertura desta solicitação.
+        <div class="campo">
+            <strong>Categoria</strong>
+            <span th:text="${solicitacao.categoria != null ? solicitacao.categoria.nome : 'Não informada'}">
+                Categoria
+            </span>
         </div>
 
-        <div th:each="anexo : ${anexosSolicitacao}"
-             style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
-
-            <p>
-                <strong>Arquivo:</strong>
-                <span th:text="${anexo.nomeOriginal}">documento.pdf</span>
-            </p>
-
-            <p>
-                <strong>Tamanho:</strong>
-                <span th:text="${#numbers.formatDecimal(anexo.tamanhoBytes / 1024.0, 1, 2)}">
-                    100
-                </span> KB
-            </p>
-
-            <a class="botao botao-voltar"
-               th:href="@{/solicitacoes/{solicitacaoId}/anexos/{anexoId}(
-                    solicitacaoId=${solicitacao.id},
-                    anexoId=${anexo.id})}">
-                Baixar documento
-            </a>
+        <div class="campo">
+            <strong>Status atual</strong>
+            <span th:text="${solicitacao.status}">Aberta</span>
         </div>
-    </section>
 
+        <div class="campo">
+            <strong>Data de abertura</strong>
+            <span th:text="${solicitacao.dataAbertura != null ? #temporals.format(solicitacao.dataAbertura, 'dd/MM/yyyy HH:mm') : 'Não informada'}">
+                01/01/2026
+            </span>
+        </div>
+
+    </div>
+
+    <div class="descricao">
+        <strong>Descrição:</strong>
+        <p th:text="${solicitacao.descricao}"></p>
+    </div>
+
+    <hr style="margin: 25px 0; border: 0; border-top: 1px solid #e5e7eb;">
+
+    <h3 style="color: #006b5f;">Documentos enviados na solicitação</h3>
+
+    <div th:if="${#lists.isEmpty(anexosSolicitacao)}"
+         class="vazio">
+        Nenhum documento foi anexado na abertura desta solicitação.
+    </div>
+
+    <div th:each="anexo : ${anexosSolicitacao}"
+         style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+
+        <p>
+            <strong>Arquivo:</strong>
+            <span th:text="${anexo.nomeOriginal}">documento.pdf</span>
+        </p>
+
+        <p>
+            <strong>Tamanho:</strong>
+            <span th:text="${#numbers.formatDecimal(anexo.tamanhoBytes / 1024.0, 1, 2)}">
+                100
+            </span> KB
+        </p>
+
+        <a class="botao botao-voltar"
+           th:href="@{/solicitacoes/{solicitacaoId}/anexos/{anexoId}(
+                solicitacaoId=${solicitacao.id},
+                anexoId=${anexo.id})}">
+            Baixar documento
+        </a>
+
+    </div>
+
+</section>
+
+               <section class="card">
         <h2>Movimentações registradas</h2>
 
         <div class="tabela-container">
@@ -276,10 +345,11 @@
             </table>
         </div>
     </section>
+</section>
 
-<!-- Respostas da equipe de RH -->
+<!-- Respostas registradas -->
 <section class="card">
-    <h2>Respostas da equipe de RH</h2>
+    <h2>Respostas registradas</h2>
 
     <div th:if="${#lists.isEmpty(respostas)}" class="vazio">
         Ainda não existem respostas registradas para esta solicitação.
@@ -336,6 +406,92 @@
     </div>
 </section>
 
+<!-- Formulário para registrar resposta -->
+<section class="card"
+         th:if="${perfilAdministrativo or solicitacao.status == 'Pendente'}">
+
+    <h2>Responder solicitação</h2>
+
+    <div class="formulario">
+
+        <form th:action="@{/solicitacoes/{id}/responder(id=${solicitacao.id})}"
+              method="post"
+              enctype="multipart/form-data">
+
+            <label for="comentario">Mensagem:</label>
+
+            <textarea id="comentario"
+                      name="comentario"
+                      placeholder="Digite sua mensagem..."
+                      required></textarea>
+
+            <label for="arquivos">Anexar documentos (opcional):</label>
+
+            <input type="file"
+                   id="arquivos"
+                   name="arquivos"
+                   multiple>
+
+            <button type="submit" class="botao botao-salvar">
+                Enviar mensagem
+            </button>
+
+        </form>
+
+    </div>
+</section>
+
+<!-- Formulários disponíveis somente para administradores -->
+<section class="card" th:if="${perfilAdministrativo}">
+
+    <h2>Gerenciar solicitação</h2>
+
+    <!-- Atualização de status -->
+    <div class="formulario">
+        <h3>Atualizar status</h3>
+
+        <form th:action="@{/solicitacoes/{id}/status(id=${solicitacao.id})}"
+              method="post">
+
+            <label for="status">Novo status:</label>
+
+            <select id="status" name="status" required>
+                <option value="">Selecione o status</option>
+
+                <option value="Aberta"
+                        th:selected="${solicitacao.status == 'Aberta'}">
+                    Aberta
+                </option>
+
+                <option value="Em análise"
+                        th:selected="${solicitacao.status == 'Em análise'}">
+                    Em análise
+                </option>
+
+                <option value="Pendente"
+                        th:selected="${solicitacao.status == 'Pendente'}">
+                    Pendente
+                </option>
+
+                <option value="Concluída"
+                        th:selected="${solicitacao.status == 'Concluída'}">
+                    Concluída
+                </option>
+
+                <option value="Cancelada"
+                        th:selected="${solicitacao.status == 'Cancelada'}">
+                    Cancelada
+                </option>
+            </select>
+
+            <button type="submit" class="botao botao-salvar">
+                Atualizar status
+            </button>
+        </form>
+    </div>
+
+</section>
 </div>
 </body>
 </html>
+
