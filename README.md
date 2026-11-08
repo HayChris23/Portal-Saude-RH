@@ -264,6 +264,8 @@ Código-fonte disponível no GitHub:
 
 https://github.com/HayChris23/Portal-Saude-RH
 
+Vídeo explicativo - https://www.loom.com/share/cfaf997cd8bf440e96c38008fb00faa1
+
 ## 15. Considerações finais
 
 O Portal Saúde RH representa uma proposta de modernização do processo de atendimento relacionado ao plano de saúde, utilizando tecnologias de desenvolvimento web para centralizar informações, organizar solicitações e facilitar a comunicação entre colaboradores e equipe responsável.
